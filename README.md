@@ -43,6 +43,16 @@ If something is missing, the site says what on its first visit, in words you can
 
 The admin is at **`/admin`**. See [Getting started](docs/getting-started.md) for what to do next.
 
+### Installing with Composer
+
+If you have Composer and PHP on the machine that will run the site, you can install from [Packagist](https://packagist.org/packages/dalefranks/ramasite) in place of steps 1 and 2:
+
+```bash
+composer create-project dalefranks/ramasite mysite --no-dev
+```
+
+That fetches the same files as the release zip, with the `vendor` folder, and prepares the settings file and database. Put the `mysite` folder where your web server serves it, then carry on from step 3. To upgrade later, upload a newer release zip's files over it, as below.
+
 ## Upgrading
 
 1. On the **Backup** screen, download a backup.
