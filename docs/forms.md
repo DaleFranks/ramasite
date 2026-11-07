@@ -2,6 +2,8 @@
 
 Forms are built here and placed in a page, post, card or module with `[form:slug]`. Every site starts with a **Contact** form and a **Newsletter** form (which just collects email addresses).
 
+![The Forms screen, listing each form with its shortcode, fields and number of submissions](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/forms.png)
+
 ## Building a form
 
 - **Name** and **Slug**: the slug is used in the shortcode.
@@ -15,6 +17,8 @@ Forms are built here and placed in a page, post, card or module with `[form:slug
   - whether it's **required**
 
 File uploads aren't offered.
+
+![The form editor, with the name, slug, button wording, thank-you message, addresses to email and the fields](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/form-editor.png)
 
 ## Submissions
 

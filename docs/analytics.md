@@ -2,6 +2,8 @@
 
 The **Analytics** screen adds visitor tracking and search engine verification to every page of the site. Nothing is added until you fill something in.
 
+![The Analytics & Verification screen, with boxes for Google Analytics, Tag Manager, Meta Pixel, Search Console and Bing](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/analytics.png)
+
 For the common services you only need an ID. Paste just the ID, or the whole snippet the service gives you, and the CMS picks the ID out of it. After saving, the box shows the ID it found. If what you pasted has no ID in it, saving says so.
 
 ## Analytics

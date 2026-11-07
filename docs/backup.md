@@ -2,6 +2,8 @@
 
 The Backup screen downloads everything that makes the site its own as one zip file. Download one before big changes and upgrades, and from time to time, and keep it somewhere safe.
 
+![The Backup screen, with what a backup holds and the Download backup button](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/backup.png)
+
 ## What's in a backup
 
 | In the zip | What it is |
