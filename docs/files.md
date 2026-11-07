@@ -2,6 +2,8 @@
 
 The file library holds files that pages link to, such as a PDF menu, a price list, a form to fill in or a ZIP of documents.
 
+![The Files screen, with the shortcode, type and size, and date added for each file](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/files.png)
+
 ## Adding files
 
 - Click **Upload files** and drop in one or more files.
