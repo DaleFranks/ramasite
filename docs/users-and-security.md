@@ -13,6 +13,8 @@ Everyone who can log in to the admin is listed on the **Users** screen. Every ac
 
 Click your initial in the top-right corner and choose **Profile** to change your name, email address or password. A new password is only saved if you also enter your current one.
 
+![The Profile screen, with name, email address and password, and the two-step login choices below](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/profile.png)
+
 ## Two-step login
 
 Two-step login asks for a code as well as your password, so a stolen or guessed password isn't enough to get in. Each admin chooses whether to use it, on their profile:
