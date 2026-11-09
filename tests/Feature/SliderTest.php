@@ -11,6 +11,7 @@ use App\Models\Slider;
 use App\SlideCaptionPosition;
 use App\SliderAnimation;
 use App\SliderArrowStyle;
+use App\SlideZoom;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -111,6 +112,20 @@ class SliderTest extends TestCase
         $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'caption' => "First <b>line</b>\nSecond line"]);
 
         $this->assertStringContainsString("First &lt;b&gt;line&lt;/b&gt;<br />\nSecond line", $slider->html());
+    }
+
+    public function test_slides_are_marked_with_their_slow_zoom(): void
+    {
+        $slider = Slider::factory()->create();
+        $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'zoom' => SlideZoom::In, 'sort' => 1]);
+        $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'zoom' => SlideZoom::Out, 'sort' => 2]);
+        $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'sort' => 3]);
+
+        $html = $slider->html();
+
+        $this->assertStringContainsString('<figure class="slide zoom-in is-active"', $html);
+        $this->assertStringContainsString('<figure class="slide zoom-out"', $html);
+        $this->assertStringContainsString('<figure class="slide"', $html);
     }
 
     public function test_a_slider_keeps_the_square_arrows_and_theme_colors_by_default(): void

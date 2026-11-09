@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\SlideCaptionPosition;
+use App\SlideZoom;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'caption_position',
     'caption_text_color',
     'caption_background_color',
+    'zoom',
     'sort',
 ])]
 class Slide extends Model
@@ -25,6 +27,7 @@ class Slide extends Model
      */
     protected $attributes = [
         'caption_position' => 'bottom',
+        'zoom' => 'off',
     ];
 
     /**
@@ -36,6 +39,7 @@ class Slide extends Model
     {
         return [
             'caption_position' => SlideCaptionPosition::class,
+            'zoom' => SlideZoom::class,
         ];
     }
 

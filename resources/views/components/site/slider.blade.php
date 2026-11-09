@@ -13,7 +13,7 @@
 >
     <div class="slider-track">
         @foreach ($slides as $slide)
-            <figure @class(['slide', 'is-active' => $loop->first]) aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ $loop->count }}">
+            <figure @class(array_filter(['slide', $slide->zoom->cssClass(), 'is-active' => $loop->first])) aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ $loop->count }}">
                 <img
                     src="{{ $slide->image->url() }}"
                     alt="{{ $slide->image->alt_text }}"

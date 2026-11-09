@@ -8,6 +8,7 @@ use App\Models\Slider;
 use App\SlideCaptionPosition;
 use App\SliderAnimation;
 use App\SliderArrowStyle;
+use App\SlideZoom;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -130,9 +131,16 @@ class SliderForm
                                     ->rows(2)
                                     ->maxLength(255)
                                     ->helperText('Shown over the image. Line breaks are kept. Optional.'),
-                                Grid::make(3)
+                                Grid::make(4)
                                     ->columnSpanFull()
                                     ->schema([
+                                        Select::make('zoom')
+                                            ->label('Slow zoom')
+                                            ->options(SlideZoom::class)
+                                            ->default(SlideZoom::Off)
+                                            ->selectablePlaceholder(false)
+                                            ->dehydrateStateUsing(fn (SlideZoom|string|null $state): SlideZoom|string => $state ?? SlideZoom::Off)
+                                            ->helperText('The image slowly zooms while the slide shows.'),
                                         Select::make('caption_position')
                                             ->label('Text position')
                                             ->options(SlideCaptionPosition::class)

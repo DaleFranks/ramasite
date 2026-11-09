@@ -28,6 +28,21 @@
             return;
         }
 
+        // Read before the track's own transition is switched off below.
+        var changeSeconds = parseFloat(getComputedStyle(isSliding ? track : slides[0]).transitionDuration) || 0;
+        var secondsPerSlide = parseFloat(slider.dataset.seconds);
+
+        // Each slide, with its copy if it has one, so both zoom in step.
+        var copiesOf = slides.map(function (slide) {
+            return [slide];
+        });
+        var leavingTimers = [];
+
+        // A slow zoom lasts as long as the slide shows and through the change to the next.
+        if (secondsPerSlide > 0) {
+            slider.style.setProperty('--slide-zoom-duration', (secondsPerSlide + changeSeconds) + 's');
+        }
+
         // In the slide animation, a copy of the last slide sits before the first and a
         // copy of the first after the last, so the slider can carry on past either end
         // and then jump, unseen, back to the real slide.
@@ -42,6 +57,8 @@
 
             track.appendChild(firstCopy);
             track.insertBefore(lastCopy, slides[0]);
+            copiesOf[0].push(firstCopy);
+            copiesOf[count - 1].push(lastCopy);
             moveTrack(1, false);
 
             track.addEventListener('transitionend', function (event) {
@@ -63,6 +80,30 @@
             moveTrack(current + 1, false);
         }
 
+        // The slide being left stays marked until it's out of sight, so its zoom carries on.
+        function markLeaving(index) {
+            copiesOf[index].forEach(function (slide) {
+                slide.classList.remove('is-active');
+                slide.classList.add('is-leaving');
+            });
+
+            window.clearTimeout(leavingTimers[index]);
+            leavingTimers[index] = window.setTimeout(function () {
+                copiesOf[index].forEach(function (slide) {
+                    slide.classList.remove('is-leaving');
+                });
+            }, changeSeconds * 1000 + 100);
+        }
+
+        function markActive(index) {
+            window.clearTimeout(leavingTimers[index]);
+
+            copiesOf[index].forEach(function (slide) {
+                slide.classList.remove('is-leaving');
+                slide.classList.add('is-active');
+            });
+        }
+
         function show(index) {
             if (isMoving) {
                 return;
@@ -70,8 +111,8 @@
 
             var next = (index + count) % count;
 
-            slides[current].classList.remove('is-active');
-            slides[next].classList.add('is-active');
+            markLeaving(current);
+            markActive(next);
             dots[current].removeAttribute('aria-current');
             dots[next].setAttribute('aria-current', 'true');
 

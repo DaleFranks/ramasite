@@ -2108,6 +2108,36 @@ select:focus {
     border-radius: 0;
 }
 
+/* Slow zoom: the image only, for as long as the slide shows and on through the change
+   to the next one. It runs once and holds, for about 8 seconds if the slider has no
+   timer; /js/slider.js sets the time on sliders with one. */
+.slider .slide.zoom-in,
+.slider .slide.zoom-out {
+    overflow: hidden;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .slider .slide.zoom-in.is-active img,
+    .slider .slide.zoom-in.is-leaving img {
+        animation: slide-zoom-in var(--slide-zoom-duration, 8s) linear forwards;
+    }
+
+    .slider .slide.zoom-out.is-active img,
+    .slider .slide.zoom-out.is-leaving img {
+        animation: slide-zoom-out var(--slide-zoom-duration, 8s) linear forwards;
+    }
+}
+
+@keyframes slide-zoom-in {
+    from { transform: scale(1); }
+    to { transform: scale(1.12); }
+}
+
+@keyframes slide-zoom-out {
+    from { transform: scale(1.12); }
+    to { transform: scale(1); }
+}
+
 /* Fade: the slides are stacked and only the current one is shown */
 .slider.animation-fade .slider-track {
     display: grid;

@@ -11,6 +11,7 @@ use App\Models\User;
 use App\SlideCaptionPosition;
 use App\SliderAnimation;
 use App\SliderArrowStyle;
+use App\SlideZoom;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -93,6 +94,24 @@ class SliderResourceTest extends TestCase
         $this->assertSame(SlideCaptionPosition::Left, $slide->caption_position);
         $this->assertSame('#112233', $slide->caption_text_color);
         $this->assertSame('rgba(10, 20, 30, 0.4)', $slide->caption_background_color);
+    }
+
+    public function test_a_slide_saves_its_slow_zoom_and_is_off_unless_chosen(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+        $slider = Slider::factory()->create();
+
+        Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
+            ->fillForm(['slides' => [
+                ['image_id' => Image::factory()->create()->id, 'zoom' => SlideZoom::Out->value],
+                ['image_id' => Image::factory()->create()->id],
+            ]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $undoRepeaterFake();
+
+        $this->assertSame([SlideZoom::Out, SlideZoom::Off], $slider->slides()->get()->pluck('zoom')->all());
     }
 
     public function test_a_slide_rejects_colors_that_are_not_colors(): void
