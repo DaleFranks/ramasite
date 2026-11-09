@@ -10,6 +10,7 @@ use App\Models\Module;
 use App\Models\Slider;
 use App\SlideCaptionPosition;
 use App\SliderAnimation;
+use App\SliderArrowStyle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -110,6 +111,40 @@ class SliderTest extends TestCase
         $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'caption' => "First <b>line</b>\nSecond line"]);
 
         $this->assertStringContainsString("First &lt;b&gt;line&lt;/b&gt;<br />\nSecond line", $slider->html());
+    }
+
+    public function test_a_slider_keeps_the_square_arrows_and_theme_colors_by_default(): void
+    {
+        $html = Slider::factory()->withSlides(2)->create()->html();
+
+        $this->assertStringContainsString('class="slider animation-slide"', $html);
+        $this->assertStringNotContainsString('--slider-nav', $html);
+        $this->assertStringContainsString('<button type="button" class="slider-prev" aria-label="Previous slide"><svg', $html);
+    }
+
+    public function test_a_slider_is_marked_with_its_arrow_style(): void
+    {
+        $html = Slider::factory()->withSlides(2)->create(['arrow_style' => SliderArrowStyle::SolidTriangle])->html();
+
+        $this->assertStringContainsString('class="slider animation-slide arrows-solid-triangle"', $html);
+        $this->assertStringContainsString(SliderArrowStyle::SolidTriangle->iconShape(), $html);
+    }
+
+    public function test_a_slider_sets_its_own_arrow_colors_with_the_backing_see_through(): void
+    {
+        $slider = Slider::factory()->withSlides(2)->create(['arrow_color' => '#112233', 'arrow_background_color' => '#ff8000']);
+
+        $this->assertStringContainsString(
+            'style="--slider-nav-color: #112233; --slider-nav-bg: rgba(255, 128, 0, 0.5); --slider-nav-bg-hover: rgba(255, 128, 0, 0.8)"',
+            $slider->html(),
+        );
+    }
+
+    public function test_a_backing_color_is_ignored_for_arrow_styles_without_a_backing(): void
+    {
+        $slider = Slider::factory()->create(['arrow_style' => SliderArrowStyle::LongArrow, 'arrow_background_color' => '#ff8000']);
+
+        $this->assertNull($slider->arrowColorVariables());
     }
 
     public function test_an_edge_to_edge_slider_is_marked_and_sits_directly_in_the_page(): void

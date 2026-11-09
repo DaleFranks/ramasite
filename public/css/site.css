@@ -2236,6 +2236,60 @@ select:focus {
     background: var(--slider-nav-bg-hover);
 }
 
+.slider-prev svg,
+.slider-next svg {
+    display: block;
+    width: 1em;
+    height: 1em;
+}
+
+.slider-next svg {
+    transform: scaleX(-1);
+}
+
+/* Arrow styles (Square is the look above) */
+.slider.arrows-outline-circle,
+.slider.arrows-bare-chevron,
+.slider.arrows-long-arrow,
+.slider.arrows-solid-triangle {
+    --slider-nav-bg: transparent;
+    --slider-nav-bg-hover: transparent;
+}
+
+.slider.is-ready.arrows-circle .slider-prev,
+.slider.is-ready.arrows-circle .slider-next,
+.slider.is-ready.arrows-outline-circle .slider-prev,
+.slider.is-ready.arrows-outline-circle .slider-next {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    padding: 0;
+    border-radius: 50%;
+}
+
+.slider.is-ready.arrows-outline-circle .slider-prev,
+.slider.is-ready.arrows-outline-circle .slider-next {
+    border: 1.5px solid currentColor;
+}
+
+.slider.is-ready.arrows-bare-chevron .slider-prev,
+.slider.is-ready.arrows-bare-chevron .slider-next,
+.slider.is-ready.arrows-long-arrow .slider-prev,
+.slider.is-ready.arrows-long-arrow .slider-next,
+.slider.is-ready.arrows-solid-triangle .slider-prev,
+.slider.is-ready.arrows-solid-triangle .slider-next {
+    padding: 6px;
+    font-size: 1.75rem;
+}
+
+.slider.is-ready.arrows-bare-chevron .slider-prev,
+.slider.is-ready.arrows-bare-chevron .slider-next {
+    font-size: 2.5rem;
+    filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.55));
+}
+
 .slider.is-ready .slider-dots {
     display: flex;
     justify-content: center;

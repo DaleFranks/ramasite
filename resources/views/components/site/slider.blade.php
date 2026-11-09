@@ -4,7 +4,8 @@
 ])
 
 <div
-    @class(['slider', 'animation-'.$slider->animation->value, 'edge-to-edge' => $slider->edge_to_edge])
+    @class(array_filter(['slider', 'animation-'.$slider->animation->value, $slider->arrow_style->cssClass(), 'edge-to-edge' => $slider->edge_to_edge]))
+    @if ($slider->arrowColorVariables()) style="{{ $slider->arrowColorVariables() }}" @endif
     @if ($slider->seconds_per_slide) data-seconds="{{ $slider->seconds_per_slide }}" @endif
     role="region"
     aria-roledescription="carousel"
@@ -28,8 +29,8 @@
     </div>
 
     @if ($slides->count() > 1)
-        <button type="button" class="slider-prev" aria-label="Previous slide">&#10094;</button>
-        <button type="button" class="slider-next" aria-label="Next slide">&#10095;</button>
+        <button type="button" class="slider-prev" aria-label="Previous slide"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">{!! $slider->arrow_style->iconShape() !!}</svg></button>
+        <button type="button" class="slider-next" aria-label="Next slide"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">{!! $slider->arrow_style->iconShape() !!}</svg></button>
         <div class="slider-dots">
             @foreach ($slides as $slide)
                 <button type="button" aria-label="Show slide {{ $loop->iteration }}" @if ($loop->first) aria-current="true" @endif></button>

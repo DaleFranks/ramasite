@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\SliderAnimation;
+use App\SliderArrowStyle;
 use Database\Factories\SliderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,6 +19,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'animation',
     'seconds_per_slide',
     'edge_to_edge',
+    'arrow_style',
+    'arrow_color',
+    'arrow_background_color',
 ])]
 class Slider extends Model
 {
@@ -32,6 +36,13 @@ class Slider extends Model
      */
     private const SAME_SHAPE_TOLERANCE = 0.01;
 
+    /**
+     * How solid an arrow's chosen backing color is shown, normally and when pointed at.
+     */
+    private const ARROW_BACKING_OPACITY = 0.5;
+
+    private const ARROW_BACKING_HOVER_OPACITY = 0.8;
+
     /** @use HasFactory<SliderFactory> */
     use HasFactory;
 
@@ -40,6 +51,7 @@ class Slider extends Model
      */
     protected $attributes = [
         'animation' => 'slide',
+        'arrow_style' => 'square',
     ];
 
     /**
@@ -53,6 +65,7 @@ class Slider extends Model
             'animation' => SliderAnimation::class,
             'seconds_per_slide' => 'integer',
             'edge_to_edge' => 'boolean',
+            'arrow_style' => SliderArrowStyle::class,
         ];
     }
 
@@ -69,6 +82,33 @@ class Slider extends Model
     public function shortcode(): string
     {
         return '[slider:'.$this->slug.']';
+    }
+
+    /**
+     * This slider's own arrow colors as CSS variables, or null to use the Theme's.
+     * The dots use the arrow color too.
+     */
+    public function arrowColorVariables(): ?string
+    {
+        $hasOwnBacking = $this->arrow_style->hasBacking() && filled($this->arrow_background_color);
+
+        $variables = array_filter([
+            filled($this->arrow_color) ? '--slider-nav-color: '.$this->arrow_color : null,
+            $hasOwnBacking ? '--slider-nav-bg: '.self::rgba($this->arrow_background_color, self::ARROW_BACKING_OPACITY) : null,
+            $hasOwnBacking ? '--slider-nav-bg-hover: '.self::rgba($this->arrow_background_color, self::ARROW_BACKING_HOVER_OPACITY) : null,
+        ]);
+
+        return $variables === [] ? null : implode('; ', $variables);
+    }
+
+    /**
+     * A color like "#112233" at the given opacity, as CSS.
+     */
+    private static function rgba(string $hexColor, float $opacity): string
+    {
+        [$red, $green, $blue] = sscanf($hexColor, '#%02x%02x%02x');
+
+        return "rgba({$red}, {$green}, {$blue}, {$opacity})";
     }
 
     /**

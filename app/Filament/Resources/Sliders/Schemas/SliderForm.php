@@ -7,6 +7,7 @@ use App\Models\Image;
 use App\Models\Slider;
 use App\SlideCaptionPosition;
 use App\SliderAnimation;
+use App\SliderArrowStyle;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -68,6 +69,28 @@ class SliderForm
                             ->maxValue(600)
                             ->suffix('seconds')
                             ->helperText('Leave empty to change slides only when the visitor clicks.'),
+                        Grid::make(3)
+                            ->columnSpanFull()
+                            ->schema([
+                                Select::make('arrow_style')
+                                    ->label('Arrow style')
+                                    ->options(SliderArrowStyle::class)
+                                    ->default(SliderArrowStyle::Square)
+                                    ->selectablePlaceholder(false)
+                                    ->required()
+                                    ->live(),
+                                ColorPicker::make('arrow_color')
+                                    ->label('Arrow and dot color')
+                                    ->hex()
+                                    ->regex(ThemeSettings::HEX_PATTERN)
+                                    ->helperText('Leave empty to use the Theme screen\'s color.'),
+                                ColorPicker::make('arrow_background_color')
+                                    ->label('Arrow backing color')
+                                    ->hex()
+                                    ->regex(ThemeSettings::HEX_PATTERN)
+                                    ->visible(fn (Get $get): bool => self::arrowStyle($get)?->hasBacking() ?? false)
+                                    ->helperText('Shown see-through, more solid when pointed at. Leave empty to use the Theme screen\'s color.'),
+                            ]),
                         Toggle::make('edge_to_edge')
                             ->label('Edge to edge on Landing pages')
                             ->live()
@@ -133,6 +156,13 @@ class SliderForm
                             ]),
                     ]),
             ]);
+    }
+
+    private static function arrowStyle(Get $get): ?SliderArrowStyle
+    {
+        $style = $get('arrow_style');
+
+        return $style instanceof SliderArrowStyle ? $style : SliderArrowStyle::tryFrom((string) $style);
     }
 
     /**

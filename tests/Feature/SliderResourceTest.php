@@ -10,6 +10,7 @@ use App\Models\Slider;
 use App\Models\User;
 use App\SlideCaptionPosition;
 use App\SliderAnimation;
+use App\SliderArrowStyle;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -107,6 +108,51 @@ class SliderResourceTest extends TestCase
             ]]])
             ->call('save')
             ->assertHasFormErrors(['slides.0.caption_text_color', 'slides.0.caption_background_color']);
+
+        $undoRepeaterFake();
+    }
+
+    public function test_the_arrow_backing_color_is_only_offered_for_styles_with_a_backing(): void
+    {
+        Livewire::test(CreateSlider::class)
+            ->assertFormFieldVisible('arrow_background_color')
+            ->fillForm(['arrow_style' => SliderArrowStyle::Circle->value])
+            ->assertFormFieldVisible('arrow_background_color')
+            ->fillForm(['arrow_style' => SliderArrowStyle::BareChevron->value])
+            ->assertFormFieldHidden('arrow_background_color');
+    }
+
+    public function test_a_slider_saves_its_arrow_settings(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+        $slider = Slider::factory()->withSlides(1)->create();
+
+        Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
+            ->fillForm([
+                'arrow_style' => SliderArrowStyle::Circle->value,
+                'arrow_color' => '#112233',
+                'arrow_background_color' => '#445566',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $undoRepeaterFake();
+
+        $slider->refresh();
+        $this->assertSame(SliderArrowStyle::Circle, $slider->arrow_style);
+        $this->assertSame('#112233', $slider->arrow_color);
+        $this->assertSame('#445566', $slider->arrow_background_color);
+    }
+
+    public function test_a_slider_rejects_arrow_colors_that_are_not_plain_colors(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+        $slider = Slider::factory()->withSlides(1)->create();
+
+        Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
+            ->fillForm(['arrow_color' => 'red; top: 0', 'arrow_background_color' => 'rgba(0, 0, 0, 0.5)'])
+            ->call('save')
+            ->assertHasFormErrors(['arrow_color', 'arrow_background_color']);
 
         $undoRepeaterFake();
     }
