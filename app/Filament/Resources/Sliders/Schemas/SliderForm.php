@@ -3,12 +3,14 @@
 namespace App\Filament\Resources\Sliders\Schemas;
 
 use App\Models\Image;
+use App\Models\Slider;
 use App\SliderAnimation;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -61,6 +63,13 @@ class SliderForm
                             ->maxValue(600)
                             ->suffix('seconds')
                             ->helperText('Leave empty to change slides only when the visitor clicks.'),
+                        Toggle::make('edge_to_edge')
+                            ->label('Edge to edge on Landing pages')
+                            ->live()
+                            ->columnSpanFull()
+                            ->helperText(fn (Get $get): ?string => $get('edge_to_edge')
+                                ? 'On a page with the Landing layout, this slider runs the full width of the window, stacked between modules like a band. On other layouts it fills the content column as usual. Use images at least '.Slider::EDGE_TO_EDGE_IMAGE_WIDTH.' pixels wide.'
+                                : null),
                     ]),
                 Section::make('Slides')
                     ->schema([

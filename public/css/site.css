@@ -2343,6 +2343,23 @@ body.layout-landing .prose > :not(.module):has(+ .module) {
     margin-bottom: 3rem;
 }
 
+/* An edge-to-edge slider is a band too: the full window, flush against other bands. */
+body.layout-landing .prose > .slider.edge-to-edge {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+body.layout-landing .prose > .slider.edge-to-edge + :not(.module, .edge-to-edge) {
+    margin-top: 3rem;
+}
+
+body.layout-landing .prose > :not(.module, .edge-to-edge):has(+ .slider.edge-to-edge) {
+    margin-bottom: 3rem;
+}
+
 /* Shown only to signed-in admins viewing a draft or scheduled entry. The
    space below the footer keeps the bar from covering the end of the page. */
 body.has-preview-bar {

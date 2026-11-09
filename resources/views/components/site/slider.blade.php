@@ -4,7 +4,7 @@
 ])
 
 <div
-    class="slider animation-{{ $slider->animation->value }}"
+    @class(['slider', 'animation-'.$slider->animation->value, 'edge-to-edge' => $slider->edge_to_edge])
     @if ($slider->seconds_per_slide) data-seconds="{{ $slider->seconds_per_slide }}" @endif
     role="region"
     aria-roledescription="carousel"

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\EntryLayout;
 use App\Markdown;
 use App\Models\Entry;
 use App\Models\Image;
@@ -57,6 +58,79 @@ class SliderTest extends TestCase
 
         $this->assertStringContainsString('class="slider animation-fade"', $html);
         $this->assertStringNotContainsString('data-seconds', $html);
+    }
+
+    public function test_an_edge_to_edge_slider_is_marked_and_sits_directly_in_the_page(): void
+    {
+        Slider::factory()->withSlides(1)->create(['slug' => 'hero', 'edge_to_edge' => true]);
+        Entry::factory()->published()->create(['slug' => 'home', 'layout' => EntryLayout::Landing, 'body' => '[slider:hero]']);
+
+        $this->assertMatchesRegularExpression(
+            '/<article class="prose">\s*<div\s+class="slider animation-slide edge-to-edge"/',
+            $this->get('/')->assertOk()->assertSee('layout-landing')->getContent(),
+        );
+    }
+
+    public function test_an_edge_to_edge_slider_warns_about_narrow_images_by_name(): void
+    {
+        $slider = $this->sliderWithImages(['edge_to_edge' => true], [
+            ['filename' => 'wide.jpg', 'width' => 1920, 'height' => 800],
+            ['filename' => 'narrow.jpg', 'width' => 1200, 'height' => 500],
+        ]);
+
+        $warnings = $slider->edgeToEdgeImageWarnings();
+
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('narrow.jpg (1200 wide)', $warnings[0]);
+        $this->assertStringNotContainsString('wide.jpg (1920', $warnings[0]);
+    }
+
+    public function test_an_edge_to_edge_slider_warns_when_slides_differ_in_shape(): void
+    {
+        $slider = $this->sliderWithImages(['edge_to_edge' => true], [
+            ['width' => 1920, 'height' => 800],
+            ['width' => 2400, 'height' => 1600],
+        ]);
+
+        $warnings = $slider->edgeToEdgeImageWarnings();
+
+        $this->assertCount(1, $warnings);
+        $this->assertStringContainsString('same shape', $warnings[0]);
+    }
+
+    public function test_an_edge_to_edge_slider_with_suitable_images_has_no_warnings(): void
+    {
+        $slider = $this->sliderWithImages(['edge_to_edge' => true], [
+            ['width' => 1920, 'height' => 800],
+            ['width' => 2400, 'height' => 1000],
+        ]);
+
+        $this->assertSame([], $slider->edgeToEdgeImageWarnings());
+    }
+
+    public function test_a_slider_that_is_not_edge_to_edge_has_no_warnings(): void
+    {
+        $slider = $this->sliderWithImages([], [
+            ['width' => 400, 'height' => 800],
+            ['width' => 800, 'height' => 400],
+        ]);
+
+        $this->assertSame([], $slider->edgeToEdgeImageWarnings());
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     * @param  list<array<string, mixed>>  $images
+     */
+    private function sliderWithImages(array $attributes, array $images): Slider
+    {
+        $slider = Slider::factory()->create($attributes);
+
+        foreach ($images as $sort => $image) {
+            $slider->slides()->create(['image_id' => Image::factory()->create($image)->id, 'sort' => $sort]);
+        }
+
+        return $slider;
     }
 
     public function test_a_single_slide_has_no_buttons_or_script(): void

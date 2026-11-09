@@ -17,9 +17,21 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
     'slug',
     'animation',
     'seconds_per_slide',
+    'edge_to_edge',
 ])]
 class Slider extends Model
 {
+    /**
+     * Narrower images than this are pointed out on an edge-to-edge slider, as
+     * they'll be stretched across a wide window.
+     */
+    public const EDGE_TO_EDGE_IMAGE_WIDTH = 1920;
+
+    /**
+     * How far apart two images' proportions may be and still count as the same shape.
+     */
+    private const SAME_SHAPE_TOLERANCE = 0.01;
+
     /** @use HasFactory<SliderFactory> */
     use HasFactory;
 
@@ -40,6 +52,7 @@ class Slider extends Model
         return [
             'animation' => SliderAnimation::class,
             'seconds_per_slide' => 'integer',
+            'edge_to_edge' => 'boolean',
         ];
     }
 
@@ -56,6 +69,43 @@ class Slider extends Model
     public function shortcode(): string
     {
         return '[slider:'.$this->slug.']';
+    }
+
+    /**
+     * What may look wrong with this slider's images when it runs edge to edge.
+     * It's only ever pointed out; the slider saves whatever its images are.
+     *
+     * @return list<string>
+     */
+    public function edgeToEdgeImageWarnings(): array
+    {
+        if (! $this->edge_to_edge) {
+            return [];
+        }
+
+        $images = $this->slides()->with('image')->get()
+            ->pluck('image')
+            ->unique('id')
+            ->filter(fn (Image $image): bool => $image->width > 0 && $image->height > 0);
+
+        $narrowImages = $images->filter(fn (Image $image): bool => $image->width < self::EDGE_TO_EDGE_IMAGE_WIDTH);
+        $shapes = $images->map(fn (Image $image): float => $image->width / $image->height);
+
+        $warnings = [];
+
+        if ($narrowImages->isNotEmpty()) {
+            $warnings[] = sprintf(
+                'These images are under %d pixels wide, so they may look blurry across a wide window: %s.',
+                self::EDGE_TO_EDGE_IMAGE_WIDTH,
+                $narrowImages->map(fn (Image $image): string => "{$image->filename} ({$image->width} wide)")->implode(', '),
+            );
+        }
+
+        if ($images->isNotEmpty() && $shapes->min() < $shapes->max() * (1 - self::SAME_SHAPE_TOLERANCE)) {
+            $warnings[] = 'The slides aren\'t all the same shape, so the slider takes the height of the tallest and shorter ones leave a gap beneath them.';
+        }
+
+        return $warnings;
     }
 
     /**

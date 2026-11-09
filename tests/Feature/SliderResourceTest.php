@@ -68,6 +68,49 @@ class SliderResourceTest extends TestCase
         $this->assertSame('Our team', $slider->slides->first()->caption);
     }
 
+    public function test_the_edge_to_edge_help_only_shows_once_it_is_selected(): void
+    {
+        Livewire::test(CreateSlider::class)
+            ->assertDontSee('1920 pixels wide')
+            ->fillForm(['edge_to_edge' => true])
+            ->assertSee('1920 pixels wide');
+    }
+
+    public function test_saving_an_edge_to_edge_slider_with_a_narrow_image_saves_and_warns(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+        $narrow = Image::factory()->create(['filename' => 'narrow.jpg', 'width' => 1000, 'height' => 500]);
+        $slider = Slider::factory()->create();
+
+        Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
+            ->fillForm([
+                'edge_to_edge' => true,
+                'slides' => [['image_id' => $narrow->id, 'caption' => null]],
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->assertNotified('Check this slider\'s images');
+
+        $undoRepeaterFake();
+
+        $this->assertTrue($slider->refresh()->edge_to_edge);
+    }
+
+    public function test_saving_a_slider_with_a_narrow_image_gives_no_warning_unless_edge_to_edge(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+        $narrow = Image::factory()->create(['width' => 1000, 'height' => 500]);
+        $slider = Slider::factory()->create();
+
+        Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
+            ->fillForm(['slides' => [['image_id' => $narrow->id, 'caption' => null]]])
+            ->call('save')
+            ->assertHasNoFormErrors()
+            ->assertNotNotified('Check this slider\'s images');
+
+        $undoRepeaterFake();
+    }
+
     public function test_a_slider_needs_at_least_one_slide(): void
     {
         $undoRepeaterFake = Repeater::fake();
