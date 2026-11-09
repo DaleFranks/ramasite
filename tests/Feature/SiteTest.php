@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\BlogColumns;
 use App\EntryStatus;
 use App\Models\Entry;
 use App\Models\Image;
 use App\Models\Theme;
 use Database\Seeders\HomePageSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class SiteTest extends TestCase
@@ -107,6 +109,37 @@ class SiteTest extends TestCase
             ->assertSee('Page 1 of 2');
 
         $this->get('/news?page=2')->assertOk()->assertSee('Third post');
+    }
+
+    public function test_a_blog_lets_the_window_decide_its_columns_by_default(): void
+    {
+        Entry::factory()->blog()->published()->create(['slug' => 'news']);
+
+        $this->get('/news')
+            ->assertOk()
+            ->assertSee('<div class="card-grid blog-feed">', false);
+    }
+
+    /**
+     * @return array<string, array{BlogColumns, string}>
+     */
+    public static function fixedBlogColumns(): array
+    {
+        return [
+            'one column' => [BlogColumns::One, 'columns-1'],
+            'two columns' => [BlogColumns::Two, 'columns-2'],
+            'three columns' => [BlogColumns::Three, 'columns-3'],
+        ];
+    }
+
+    #[DataProvider('fixedBlogColumns')]
+    public function test_a_blog_uses_the_number_of_columns_it_is_set_to(BlogColumns $columns, string $expectedClass): void
+    {
+        Entry::factory()->blog()->published()->create(['slug' => 'news', 'posts_columns' => $columns]);
+
+        $this->get('/news')
+            ->assertOk()
+            ->assertSee('<div class="card-grid blog-feed '.$expectedClass.'">', false);
     }
 
     public function test_a_blog_feed_shows_each_posts_first_image(): void

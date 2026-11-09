@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Entries\Schemas;
 
+use App\BlogColumns;
 use App\EntryLayout;
 use App\EntryStatus;
 use App\EntryType;
@@ -160,6 +161,13 @@ class EntryForm
                                     ->default(Entry::DEFAULT_POSTS_PER_PAGE)
                                     ->required(fn (Get $get): bool => self::isBlog($get))
                                     ->helperText('How many posts the blog lists before going on to a next page. Multiples of 3 fill the rows evenly.'),
+                                Select::make('posts_columns')
+                                    ->label('Columns')
+                                    ->options(BlogColumns::class)
+                                    ->default(BlogColumns::Automatic)
+                                    ->selectablePlaceholder(false)
+                                    ->required(fn (Get $get): bool => self::isBlog($get))
+                                    ->helperText('How many columns of posts to show. On smaller screens, 3 columns become 2, and phones always show 1.'),
                             ]),
                         Section::make('Menu')
                             ->hidden(fn (Get $get): bool => self::isPost($get))

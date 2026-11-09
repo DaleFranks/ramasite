@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\BlogColumns;
 use App\EntryStatus;
 use App\EntryType;
 use App\Filament\Resources\Entries\Pages\CreateEntry;
@@ -253,6 +254,36 @@ class EntryResourceTest extends TestCase
             ->assertFormFieldHidden('posts_per_page')
             ->fillForm(['type' => EntryType::Blog->value])
             ->assertFormFieldVisible('posts_per_page');
+    }
+
+    public function test_a_new_blog_arranges_posts_automatically_unless_changed(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateEntry::class)
+            ->fillForm(['type' => EntryType::Blog->value])
+            ->assertFormSet(['posts_columns' => BlogColumns::Automatic])
+            ->fillForm([
+                'title' => 'News',
+                'slug' => 'news',
+                'status' => EntryStatus::Published->value,
+                'posts_columns' => BlogColumns::Two->value,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('entries', ['path' => 'news', 'posts_columns' => 'two']);
+    }
+
+    public function test_the_columns_setting_is_only_shown_for_blogs(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(CreateEntry::class)
+            ->fillForm(['type' => EntryType::Page->value])
+            ->assertFormFieldHidden('posts_columns')
+            ->fillForm(['type' => EntryType::Blog->value])
+            ->assertFormFieldVisible('posts_columns');
     }
 
     public function test_a_post_must_have_a_blog(): void

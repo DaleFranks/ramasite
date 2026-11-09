@@ -57,6 +57,7 @@ When the menu doesn't fit beside the logo (and always on phones), it folds into 
 A blog's page shows its own content first, then its published posts as cards: each post's featured image (or else its first image), its title, date, and the first three sentences.
 
 - **Posts per page** (in the Blog box): how many posts are listed before going on to a next page. It starts at 9, which fills three rows of three.
+- **Columns** (in the Blog box): how the cards are arranged. **Automatic**, the starting choice, fits as many columns as the window has room for. You can instead choose 1, 2 or 3 columns. On smaller screens, 3 columns become 2, and phones always show 1.
 
 ### RSS feed
 

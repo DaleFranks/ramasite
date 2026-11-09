@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\BlogColumns;
 use App\EntryLayout;
 use App\EntryStatus;
 use App\EntryType;
@@ -36,6 +37,7 @@ use Illuminate\Support\Str;
     'nav_order',
     'menu_label',
     'posts_per_page',
+    'posts_columns',
     'parent_id',
     'meta_description',
     'meta_keywords',
@@ -73,6 +75,7 @@ class Entry extends Model
     protected $attributes = [
         'status' => 'draft',
         'layout' => 'standard',
+        'posts_columns' => 'automatic',
     ];
 
     protected static function booted(): void
@@ -118,6 +121,7 @@ class Entry extends Model
             'published_at' => 'datetime',
             'nav_order' => 'integer',
             'posts_per_page' => 'integer',
+            'posts_columns' => BlogColumns::class,
         ];
     }
 
