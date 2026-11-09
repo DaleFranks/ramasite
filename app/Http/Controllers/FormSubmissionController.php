@@ -18,8 +18,8 @@ class FormSubmissionController extends Controller
     {
         $backToForm = self::backToForm($form);
 
-        // Only spam bots fill in the hidden field. They're thanked, but nothing is kept.
-        if (filled($request->input(Form::HONEYPOT_FIELD))) {
+        // Spam robots are thanked, but nothing is kept.
+        if (self::isFromSpamRobot($request)) {
             return $backToForm->with('form_sent', $form->slug);
         }
 
@@ -36,6 +36,17 @@ class FormSubmissionController extends Controller
         $form->recordSubmission($validator->validated())->sendNotification();
 
         return $backToForm->with('form_sent', $form->slug);
+    }
+
+    /**
+     * Robots fill in the field hidden from people, send the form at once, or
+     * post it without running the form's script.
+     */
+    private static function isFromSpamRobot(Request $request): bool
+    {
+        return filled($request->input(Form::HONEYPOT_FIELD))
+            || $request->input(Form::JAVASCRIPT_CHECK_FIELD) !== Form::JAVASCRIPT_CHECK_VALUE
+            || ! Form::wasShownLongEnoughAgo($request->input(Form::SHOWN_AT_FIELD));
     }
 
     /**

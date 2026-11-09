@@ -8,6 +8,7 @@ use App\Models\FormSubmission;
 use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class FormSubmissionTest extends TestCase
@@ -37,13 +38,13 @@ class FormSubmissionTest extends TestCase
     public function test_a_valid_submission_is_saved_and_the_thank_you_message_replaces_the_form(): void
     {
         $this->from('/contact-us')
-            ->post('/forms/contact', [
+            ->post('/forms/contact', $this->sentByVisitor([
                 'your_name' => 'Ann Smith',
                 'email' => 'ann@example.com',
                 'guests' => '2',
                 'room' => 'Double',
                 'extras' => ['Breakfast', 'Parking'],
-            ])
+            ]))
             ->assertRedirect(url('/contact-us').'#form-contact');
 
         $submission = FormSubmission::query()->sole();
@@ -65,7 +66,7 @@ class FormSubmissionTest extends TestCase
     public function test_mistakes_are_shown_under_their_fields_with_the_answers_kept(): void
     {
         $this->from('/contact-us')
-            ->post('/forms/contact', ['_form' => 'contact', 'your_name' => '', 'email' => 'not-an-email', 'guests' => 'lots', 'room' => 'Penthouse', 'extras' => ['Spa']])
+            ->post('/forms/contact', $this->sentByVisitor(['_form' => 'contact', 'your_name' => '', 'email' => 'not-an-email', 'guests' => 'lots', 'room' => 'Penthouse', 'extras' => ['Spa']]))
             ->assertRedirect(url('/contact-us').'#form-contact');
 
         $this->assertDatabaseCount('form_submissions', 0);
@@ -87,7 +88,7 @@ class FormSubmissionTest extends TestCase
         Form::factory()->create(['slug' => 'newsletter', 'fields' => [['label' => 'Email', 'type' => 'email', 'required' => true]]]);
         Entry::factory()->published()->create(['slug' => 'both', 'body' => "[form:contact]\n\n[form:newsletter]"]);
 
-        $this->from('/both')->post('/forms/contact', ['_form' => 'contact', 'email' => 'typo']);
+        $this->from('/both')->post('/forms/contact', $this->sentByVisitor(['_form' => 'contact', 'email' => 'typo']));
 
         $html = $this->get('/both')->getContent();
         $newsletter = substr($html, strpos($html, 'id="form-newsletter"'));
@@ -98,7 +99,7 @@ class FormSubmissionTest extends TestCase
 
     public function test_optional_fields_left_empty_are_saved_as_empty(): void
     {
-        $this->from('/contact-us')->post('/forms/contact', ['your_name' => 'Ann', 'email' => 'ann@example.com']);
+        $this->from('/contact-us')->post('/forms/contact', $this->sentByVisitor(['your_name' => 'Ann', 'email' => 'ann@example.com']));
 
         $answers = FormSubmission::query()->sole()->answers;
 
@@ -115,9 +116,65 @@ class FormSubmissionTest extends TestCase
         $this->assertDatabaseCount('form_submissions', 0);
     }
 
+    public function test_a_form_sent_too_soon_after_it_was_shown_is_thanked_but_nothing_is_saved(): void
+    {
+        $this->from('/contact-us')
+            ->post('/forms/contact', $this->sentByVisitor(['your_name' => 'Bot', 'email' => 'bot@example.com', Form::SHOWN_AT_FIELD => Form::shownAtToken()]))
+            ->assertSessionHas('form_sent', 'contact');
+
+        $this->assertDatabaseCount('form_submissions', 0);
+    }
+
+    public function test_a_form_sent_after_the_minimum_wait_is_saved(): void
+    {
+        $shownAt = $this->travel(-Form::MINIMUM_SECONDS_BEFORE_SENDING)->seconds(fn (): string => Form::shownAtToken());
+
+        $this->from('/contact-us')
+            ->post('/forms/contact', $this->sentByVisitor(['your_name' => 'Ann', 'email' => 'ann@example.com', Form::SHOWN_AT_FIELD => $shownAt]));
+
+        $this->assertDatabaseCount('form_submissions', 1);
+    }
+
+    /**
+     * @return array<string, array{string, mixed}>
+     */
+    public static function failedSpamChecks(): array
+    {
+        return [
+            'no time' => [Form::SHOWN_AT_FIELD, null],
+            'made-up time' => [Form::SHOWN_AT_FIELD, '1000000000'],
+            'time sent as a list' => [Form::SHOWN_AT_FIELD, ['1000000000']],
+            'script did not run' => [Form::JAVASCRIPT_CHECK_FIELD, ''],
+            'no script value' => [Form::JAVASCRIPT_CHECK_FIELD, null],
+            'wrong script value' => [Form::JAVASCRIPT_CHECK_FIELD, 'something-else'],
+        ];
+    }
+
+    #[DataProvider('failedSpamChecks')]
+    public function test_a_form_failing_a_spam_check_is_thanked_but_nothing_is_saved(string $field, mixed $value): void
+    {
+        $this->from('/contact-us')
+            ->post('/forms/contact', array_filter(
+                [...$this->sentByVisitor(['your_name' => 'Bot', 'email' => 'bot@example.com']), $field => $value],
+                fn (mixed $sent): bool => $sent !== null,
+            ))
+            ->assertSessionHas('form_sent', 'contact');
+
+        $this->assertDatabaseCount('form_submissions', 0);
+    }
+
+    public function test_a_form_sent_back_with_mistakes_keeps_the_time_it_was_first_shown(): void
+    {
+        $answers = $this->sentByVisitor(['_form' => 'contact', 'your_name' => '', 'email' => 'typo']);
+
+        $this->from('/contact-us')->post('/forms/contact', $answers);
+
+        $this->get('/contact-us')->assertSee('value="'.$answers[Form::SHOWN_AT_FIELD].'"', false);
+    }
+
     public function test_answers_to_fields_the_form_does_not_have_are_ignored(): void
     {
-        $this->from('/contact-us')->post('/forms/contact', ['your_name' => 'Ann', 'email' => 'ann@example.com', 'is_admin' => '1']);
+        $this->from('/contact-us')->post('/forms/contact', $this->sentByVisitor(['your_name' => 'Ann', 'email' => 'ann@example.com', 'is_admin' => '1']));
 
         $this->assertArrayNotHasKey('is_admin', FormSubmission::query()->sole()->answers);
     }
@@ -127,11 +184,11 @@ class FormSubmissionTest extends TestCase
         RateLimiter::clear('form-submissions');
 
         foreach (range(1, 5) as $attempt) {
-            $this->from('/contact-us')->post('/forms/contact', ['your_name' => 'Ann', 'email' => 'ann@example.com']);
+            $this->from('/contact-us')->post('/forms/contact', $this->sentByVisitor(['your_name' => 'Ann', 'email' => 'ann@example.com']));
         }
 
         $this->from('/contact-us')
-            ->post('/forms/contact', ['your_name' => 'Ann', 'email' => 'ann@example.com'])
+            ->post('/forms/contact', $this->sentByVisitor(['your_name' => 'Ann', 'email' => 'ann@example.com']))
             ->assertRedirect(url('/contact-us').'#form-contact');
 
         $this->assertDatabaseCount('form_submissions', 5);

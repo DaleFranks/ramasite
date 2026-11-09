@@ -23,6 +23,15 @@
         <label>Leave this empty <input type="text" name="{{ \App\Models\Form::HONEYPOT_FIELD }}" tabindex="-1" autocomplete="off"></label>
     </div>
 
+    {{-- Spam checks. A form sent back with mistakes keeps its first time, so correcting it quickly still counts --}}
+    <input type="hidden" name="{{ \App\Models\Form::SHOWN_AT_FIELD }}" value="{{ $oldValue(\App\Models\Form::SHOWN_AT_FIELD, \App\Models\Form::shownAtToken()) }}">
+    <input type="hidden" name="{{ \App\Models\Form::JAVASCRIPT_CHECK_FIELD }}" value="">
+    <script>
+        document.currentScript.closest('form').addEventListener('submit', function (event) {
+            event.currentTarget.elements['{{ \App\Models\Form::JAVASCRIPT_CHECK_FIELD }}'].value = '{{ \App\Models\Form::JAVASCRIPT_CHECK_VALUE }}';
+        });
+    </script>
+
     @foreach ($fields as $field)
         @php
             $id = 'form-'.$form->slug.'-'.$field['key'];
@@ -92,6 +101,8 @@
     @if ($errorBag->has('form'))
         <p class="form-error" role="alert">{{ $errorBag->first('form') }}</p>
     @endif
+
+    <noscript><p class="form-help">This form needs JavaScript to send. Please turn it on in your browser.</p></noscript>
 
     <div>
         <button type="submit" class="btn btn-primary">{{ $form->submit_label }}</button>

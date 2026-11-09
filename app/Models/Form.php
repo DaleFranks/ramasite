@@ -4,11 +4,13 @@ namespace App\Models;
 
 use App\FormFieldType;
 use Database\Factories\FormFactory;
+use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -38,6 +40,23 @@ class Form extends Model
      * The hidden field that only spam bots fill in.
      */
     public const HONEYPOT_FIELD = 'website_url';
+
+    /**
+     * The hidden field holding the signed time the form was shown.
+     */
+    public const SHOWN_AT_FIELD = '_shown_at';
+
+    /**
+     * The hidden field that the form's script fills in just before sending.
+     */
+    public const JAVASCRIPT_CHECK_FIELD = '_javascript_check';
+
+    public const JAVASCRIPT_CHECK_VALUE = 'sent-with-javascript';
+
+    /**
+     * Anything sent sooner than this after the form was shown is taken for a spam robot.
+     */
+    public const MINIMUM_SECONDS_BEFORE_SENDING = 3;
 
     /**
      * @var array<string, mixed>
@@ -246,6 +265,33 @@ class Form extends Model
     public function shortcode(): string
     {
         return '[form:'.$this->slug.']';
+    }
+
+    /**
+     * The current time, signed so that a visitor can't alter it.
+     */
+    public static function shownAtToken(): string
+    {
+        return Crypt::encryptString((string) now()->getTimestamp());
+    }
+
+    /**
+     * Whether a token from shownAtToken() is genuine and old enough to have been
+     * filled in by a person.
+     */
+    public static function wasShownLongEnoughAgo(mixed $token): bool
+    {
+        if (! is_string($token)) {
+            return false;
+        }
+
+        try {
+            $shownAt = (int) Crypt::decryptString($token);
+        } catch (DecryptException) {
+            return false;
+        }
+
+        return now()->getTimestamp() - $shownAt >= self::MINIMUM_SECONDS_BEFORE_SENDING;
     }
 
     /**

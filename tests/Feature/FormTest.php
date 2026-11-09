@@ -56,6 +56,10 @@ class FormTest extends TestCase
         $this->assertStringContainsString('<form class="site-form form-vertical" method="POST" action="'.route('forms.submit', 'everything').'"', $html);
         $this->assertStringContainsString('name="_token"', $html);
         $this->assertStringContainsString('name="'.Form::HONEYPOT_FIELD.'"', $html);
+        $this->assertStringContainsString('<input type="hidden" name="'.Form::SHOWN_AT_FIELD.'" value="ey', $html);
+        $this->assertStringContainsString('<input type="hidden" name="'.Form::JAVASCRIPT_CHECK_FIELD.'" value="">', $html);
+        $this->assertStringContainsString("elements['".Form::JAVASCRIPT_CHECK_FIELD."'].value = '".Form::JAVASCRIPT_CHECK_VALUE."'", $html);
+        $this->assertStringContainsString('<noscript><p class="form-help">This form needs JavaScript to send.', $html);
         $this->assertMatchesRegularExpression('#<input\s+type="text"\s+id="form-everything-name"\s+name="name"[^>]*required[^>]*aria-describedby="form-everything-name-help"#', $html);
         $this->assertStringContainsString('<p class="form-help" id="form-everything-name-help">As on your passport</p>', $html);
         $this->assertMatchesRegularExpression('#type="email"\s+id="form-everything-email"#', $html);

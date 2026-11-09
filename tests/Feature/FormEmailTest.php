@@ -41,12 +41,12 @@ class FormEmailTest extends TestCase
 
     private function send(): void
     {
-        $this->from('/contact-us')->post('/forms/contact', [
+        $this->from('/contact-us')->post('/forms/contact', $this->sentByVisitor([
             'name' => 'Ann & Co',
             'email' => 'ann@example.com',
             'topics' => ['Sales', 'Support'],
             'message' => "Line one\nLine two <b>bold</b>",
-        ]);
+        ]));
     }
 
     public function test_each_submission_is_emailed_to_the_forms_addresses_with_replies_going_to_the_visitor(): void

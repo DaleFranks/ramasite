@@ -26,4 +26,6 @@ Everything sent with a form is stored, whether or not the email went out. Open a
 
 ## Spam
 
-Every form has a hidden field that only spam robots fill in: they're shown the thank-you message, but nothing is kept or emailed. A visitor can also send the same form at most 5 times a minute.
+Every form checks for spam robots in three ways: a hidden field that only robots fill in, a form sent less than 3 seconds after it was shown, and a form posted without running its small script. A robot caught by any of these is shown the thank-you message, but nothing is kept or emailed. A visitor can also send the same form at most 5 times a minute.
+
+Because of the script check, a form can only be sent with JavaScript turned on. Visitors without it see a short note saying so on the form.
