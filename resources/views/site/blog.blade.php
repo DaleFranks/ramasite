@@ -17,7 +17,7 @@
         {!! $entry->bodyHtml() !!}
     </article>
 
-    <div @class(array_filter(['card-grid', 'blog-feed', $entry->posts_columns->cssClass()]))>
+    <div @class(array_filter(['card-grid', 'blog-feed', $entry->posts_columns?->cssClass()]))>
         @forelse ($posts as $post)
             <article class="card feed-item">
                 @isset($previewImages[$post->id])

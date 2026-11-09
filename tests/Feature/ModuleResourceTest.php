@@ -2,10 +2,12 @@
 
 namespace Tests\Feature;
 
+use App\BandEdge;
 use App\BoxStyle;
 use App\Filament\Resources\Modules\Pages\CreateModule;
 use App\Filament\Resources\Modules\Pages\EditModule;
 use App\Filament\Resources\Modules\Pages\ListModules;
+use App\Models\Image;
 use App\Models\Module;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
@@ -69,5 +71,36 @@ class ModuleResourceTest extends TestCase
 
         $this->assertSame('[navigation:multi]', $footer->refresh()->body);
         $this->assertSame(Module::FOOTER_SLUG, $footer->slug);
+    }
+
+    public function test_a_module_saves_its_background_image_and_edge_shapes(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $image = Image::factory()->create();
+        $module = Module::factory()->create();
+
+        Livewire::test(EditModule::class, ['record' => $module->getRouteKey()])
+            ->fillForm([
+                'background_image_id' => $image->id,
+                'top_edge' => BandEdge::Wave->value,
+                'bottom_edge' => BandEdge::SlantRight->value,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $module->refresh();
+        $this->assertTrue($module->backgroundImage->is($image));
+        $this->assertSame(BandEdge::Wave, $module->top_edge);
+        $this->assertSame(BandEdge::SlantRight, $module->bottom_edge);
+    }
+
+    public function test_the_footer_has_no_background_image_or_edge_settings(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(EditModule::class, ['record' => Module::footer()->getRouteKey()])
+            ->assertFormFieldHidden('background_image_id')
+            ->assertFormFieldHidden('top_edge')
+            ->assertFormFieldHidden('bottom_edge');
     }
 }

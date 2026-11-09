@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\BandEdge;
 use App\BoxStyle;
 use App\Models\Entry;
+use App\Models\Image;
 use App\Models\Module;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -23,6 +25,46 @@ class ModuleShortcodeTest extends TestCase
             "<p>Before.</p>\n<div class=\"module cta-module theme-dark\">\n<h2>Ready?</h2>\n<p>Get in <strong>touch</strong>.</p>\n\n</div>\n<p>After.</p>",
             $html,
         );
+    }
+
+    public function test_a_module_shows_its_background_image(): void
+    {
+        $image = Image::factory()->create(['filename' => 'sky.jpg']);
+        $module = Module::factory()->create(['slug' => 'band', 'body' => 'Hello.', 'style' => BoxStyle::Dark, 'background_image_id' => $image->id]);
+
+        $this->assertStringStartsWith(
+            '<div class="module band-module theme-dark has-background-image" style="'.e("background-image: url('{$image->url()}')").'">',
+            $module->html(),
+        );
+    }
+
+    public function test_a_module_is_marked_with_its_edge_shapes(): void
+    {
+        $module = Module::factory()->create(['slug' => 'band', 'body' => 'Hello.', 'top_edge' => BandEdge::SlantLeft, 'bottom_edge' => BandEdge::Wave]);
+
+        $this->assertStringStartsWith(
+            '<div class="module band-module has-top-edge edge-top-slant-left has-bottom-edge edge-bottom-wave">',
+            $module->html(),
+        );
+    }
+
+    public function test_a_module_with_only_one_edge_shape_is_only_marked_on_that_side(): void
+    {
+        $module = Module::factory()->create(['slug' => 'band', 'body' => 'Hello.', 'bottom_edge' => BandEdge::SlantRight]);
+
+        $this->assertStringStartsWith('<div class="module band-module has-bottom-edge edge-bottom-slant-right">', $module->html());
+    }
+
+    public function test_an_image_behind_a_module_counts_as_in_use(): void
+    {
+        $image = Image::factory()->create();
+        Module::factory()->create(['name' => 'Hero band', 'background_image_id' => $image->id]);
+
+        $this->assertSame(['Module: Hero band'], $image->usages()->all());
+
+        $image->delete();
+
+        $this->assertModelExists($image);
     }
 
     public function test_a_module_without_a_style_has_no_theme_class(): void

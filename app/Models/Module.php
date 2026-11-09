@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\BandEdge;
 use App\BoxStyle;
 use App\Markdown;
 use Database\Factories\ModuleFactory;
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * A reusable block of Markdown, such as the site footer, placed in a page
@@ -26,6 +28,9 @@ use Illuminate\Database\Eloquent\Model;
     'slug',
     'body',
     'style',
+    'background_image_id',
+    'top_edge',
+    'bottom_edge',
 ])]
 class Module extends Model
 {
@@ -58,7 +63,19 @@ class Module extends Model
     {
         return [
             'style' => BoxStyle::class,
+            'top_edge' => BandEdge::class,
+            'bottom_edge' => BandEdge::class,
         ];
+    }
+
+    /**
+     * The library image behind the module's text, if it has one.
+     *
+     * @return BelongsTo<Image, $this>
+     */
+    public function backgroundImage(): BelongsTo
+    {
+        return $this->belongsTo(Image::class, 'background_image_id');
     }
 
     /**
@@ -82,17 +99,31 @@ class Module extends Model
 
     /**
      * The body as HTML in a container whose classes name the module and its style,
-     * e.g. "module cta-module theme-dark".
+     * e.g. "module cta-module theme-dark", with its background image and edge shapes.
+     * The edge shapes only take effect on the Landing layout.
      *
      * @param  Collection<int, Entry>|null  $menu  The menu, if it's already been loaded.
      */
     public function html(?Collection $menu = null): string
     {
-        $classes = collect(['module', $this->slug.'-module', $this->style ? 'theme-'.$this->style->value : null])
+        $backgroundImage = $this->backgroundImage;
+        $hasTopEdge = ($this->top_edge ?? BandEdge::None) !== BandEdge::None;
+        $hasBottomEdge = ($this->bottom_edge ?? BandEdge::None) !== BandEdge::None;
+
+        $classes = collect([
+            'module',
+            $this->slug.'-module',
+            $this->style ? 'theme-'.$this->style->value : null,
+            $backgroundImage ? 'has-background-image' : null,
+            $hasTopEdge ? 'has-top-edge edge-top-'.$this->top_edge->value : null,
+            $hasBottomEdge ? 'has-bottom-edge edge-bottom-'.$this->bottom_edge->value : null,
+        ])
             ->filter()
             ->implode(' ');
 
-        return '<div class="'.e($classes).'">'."\n".$this->bodyHtml($menu)."\n".'</div>';
+        $style = $backgroundImage ? ' style="'.e("background-image: url('{$backgroundImage->url()}')").'"' : '';
+
+        return '<div class="'.e($classes).'"'.$style.'>'."\n".$this->bodyHtml($menu)."\n".'</div>';
     }
 
     /**

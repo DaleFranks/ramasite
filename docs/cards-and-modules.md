@@ -19,7 +19,12 @@ A card is a small box, such as a service, a price plan or a call to action. Card
 
 A module is a larger section, such as a call-to-action band or a contact section. Place one in a page with `[module:slug]`. On a page with the **Landing** layout, modules stretch across the whole window as bands.
 
-Modules have a name, slug, style and content, like cards.
+Modules have a name, slug, style and content, like cards. They also have:
+
+- **Background image**: a picture from the [image library](images.md) behind the module's text, on any page. It always fills the module and is cropped to fit. The text color comes from the module's style. An image used this way can't be deleted from the library until it's removed from the module.
+- **Top edge** and **Bottom edge**: None (the starting choice), Slant left, Slant right or Wave, each set separately. They only take effect on the **Landing** layout. The shape cuts into the band, the page color shows through the part cut away, and a space of page color is left on that side. A slant left rises toward the left of the window, and a slant right toward the right.
+
+The footer doesn't have these settings.
 
 ## The footer
 

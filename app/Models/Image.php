@@ -265,7 +265,8 @@ class Image extends Model
 
     /**
      * Where the image is used, by name: the pages, posts, modules and cards whose
-     * content uses it and the sliders that show it, e.g. "Page: About us".
+     * content uses it, the sliders that show it and the modules with it as their
+     * background, e.g. "Page: About us".
      *
      * @return Collection<int, string>
      */
@@ -274,6 +275,9 @@ class Image extends Model
         return $this->contentUsing($this->filename)
             ->merge(Slider::query()->whereRelation('slides', 'image_id', $this->id)->pluck('name')
                 ->map(fn (string $name): string => 'Slider: '.$name))
+            ->merge(Module::query()->where('background_image_id', $this->id)->pluck('name')
+                ->map(fn (string $name): string => 'Module: '.$name))
+            ->unique()
             ->values();
     }
 

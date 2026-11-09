@@ -178,7 +178,7 @@ class SliderForm
      *
      * @return array<int, string>
      */
-    private static function imageOptions(): array
+    public static function imageOptions(): array
     {
         return Image::query()
             ->latest()

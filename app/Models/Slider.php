@@ -90,7 +90,7 @@ class Slider extends Model
      */
     public function arrowColorVariables(): ?string
     {
-        $hasOwnBacking = $this->arrow_style->hasBacking() && filled($this->arrow_background_color);
+        $hasOwnBacking = $this->arrow_style?->hasBacking() && filled($this->arrow_background_color);
 
         $variables = array_filter([
             filled($this->arrow_color) ? '--slider-nav-color: '.$this->arrow_color : null,

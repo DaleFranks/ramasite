@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\Modules\Schemas;
 
+use App\BandEdge;
 use App\BoxStyle;
+use App\Filament\Resources\Sliders\Schemas\SliderForm;
 use App\Models\Module;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -54,6 +57,30 @@ class ModuleForm
                             ->placeholder('None')
                             ->helperText('Shows the module as a colored panel.')
                             ->hidden(fn (?Module $record): bool => $record?->isFooter() ?? false),
+                        Select::make('background_image_id')
+                            ->label('Background image')
+                            ->options(fn (): array => SliderForm::imageOptions())
+                            ->allowHtml()
+                            ->searchable()
+                            ->placeholder('None')
+                            ->helperText('Fills the module behind its text, cropped to fit. The text color comes from the style.')
+                            ->hidden(fn (?Module $record): bool => $record?->isFooter() ?? false),
+                        Grid::make(2)
+                            ->hidden(fn (?Module $record): bool => $record?->isFooter() ?? false)
+                            ->schema([
+                                Select::make('top_edge')
+                                    ->label('Top edge')
+                                    ->options(BandEdge::class)
+                                    ->default(BandEdge::None)
+                                    ->selectablePlaceholder(false)
+                                    ->helperText('Only on the Landing layout. The shape cuts into the band, with a space above it.'),
+                                Select::make('bottom_edge')
+                                    ->label('Bottom edge')
+                                    ->options(BandEdge::class)
+                                    ->default(BandEdge::None)
+                                    ->selectablePlaceholder(false)
+                                    ->helperText('Only on the Landing layout. The shape cuts into the band, with a space below it.'),
+                            ]),
                         MarkdownEditor::make('body')
                             ->label('Content')
                             ->helperText('Shortcodes: [navigation:flat] shows a row of menu links, [navigation:multi] shows a column per menu item with its sub-pages, [curr-year] shows the current year and [site-name] shows the site name.'),
