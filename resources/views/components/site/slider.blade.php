@@ -21,7 +21,7 @@
                     @unless ($loop->first) loading="lazy" @endunless
                 >
                 @if (filled($slide->caption))
-                    <figcaption class="slide-caption">{{ $slide->caption }}</figcaption>
+                    <figcaption @class(array_filter(['slide-caption', $slide->caption_position->cssClass()]))@if ($slide->captionStyle()) style="{{ $slide->captionStyle() }}"@endif>{!! nl2br(e($slide->caption)) !!}</figcaption>
                 @endif
             </figure>
         @endforeach

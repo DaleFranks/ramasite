@@ -58,9 +58,9 @@ class ThemeSettings extends Page
 
     protected static ?string $title = 'Theme';
 
-    private const HEX_PATTERN = '/^#[0-9a-fA-F]{6}$/';
+    public const HEX_PATTERN = '/^#[0-9a-fA-F]{6}$/';
 
-    private const RGBA_PATTERN = '/^(#[0-9a-fA-F]{6}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+)\s*)?\))$/';
+    public const RGBA_PATTERN = '/^(#[0-9a-fA-F]{6}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+)\s*)?\))$/';
 
     /**
      * @var array<string, mixed>|null

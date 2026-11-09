@@ -2141,6 +2141,55 @@ select:focus {
     line-height: 1.4;
 }
 
+/* The dots sit at the top of the slide, so a top banner starts below them */
+.slider .slide-caption.caption-top {
+    top: 8px;
+    bottom: auto;
+}
+
+.slider.is-ready .slide-caption.caption-top {
+    top: 30px;
+}
+
+/* Boxes at the side, clear of the arrows when there are any */
+.slider {
+    --slide-caption-side-gap: 8px;
+}
+
+.slider.is-ready {
+    --slide-caption-side-gap: 64px;
+}
+
+.slider .slide-caption.caption-left,
+.slider .slide-caption.caption-right {
+    top: 50%;
+    bottom: auto;
+    width: 40%;
+    transform: translateY(-50%);
+}
+
+.slider .slide-caption.caption-left {
+    left: var(--slide-caption-side-gap);
+    right: auto;
+}
+
+.slider .slide-caption.caption-right {
+    left: auto;
+    right: var(--slide-caption-side-gap);
+}
+
+@media (max-width: 576px) {
+    .slider .slide-caption.caption-left,
+    .slider .slide-caption.caption-right {
+        top: auto;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+        transform: none;
+    }
+}
+
 /* Buttons and dots only once the script is running */
 .slider-prev,
 .slider-next,

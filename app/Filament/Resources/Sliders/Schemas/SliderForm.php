@@ -2,16 +2,21 @@
 
 namespace App\Filament\Resources\Sliders\Schemas;
 
+use App\Filament\Pages\ThemeSettings;
 use App\Models\Image;
 use App\Models\Slider;
+use App\SlideCaptionPosition;
 use App\SliderAnimation;
+use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\ToggleButtons;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -98,9 +103,33 @@ class SliderForm
                                     ])
                                     ->createOptionUsing(fn (array $data): int => Image::storeUpload($data['file'])->id)
                                     ->helperText('The image\'s alt text in the library is used.'),
-                                TextInput::make('caption')
+                                Textarea::make('caption')
+                                    ->rows(2)
                                     ->maxLength(255)
-                                    ->helperText('Shown over the bottom of the image. Optional.'),
+                                    ->helperText('Shown over the image. Line breaks are kept. Optional.'),
+                                Grid::make(3)
+                                    ->columnSpanFull()
+                                    ->schema([
+                                        Select::make('caption_position')
+                                            ->label('Text position')
+                                            ->options(SlideCaptionPosition::class)
+                                            ->default(SlideCaptionPosition::Bottom)
+                                            ->selectablePlaceholder(false)
+                                            ->dehydrateStateUsing(fn (SlideCaptionPosition|string|null $state): SlideCaptionPosition|string => $state ?? SlideCaptionPosition::Bottom)
+                                            ->helperText('On phones, a box at the side becomes a banner at the bottom.'),
+                                        ColorPicker::make('caption_text_color')
+                                            ->label('Text color')
+                                            ->hex()
+                                            ->regex(ThemeSettings::HEX_PATTERN)
+                                            ->placeholder('#ffffff')
+                                            ->helperText('Leave empty for white.'),
+                                        ColorPicker::make('caption_background_color')
+                                            ->label('Background color')
+                                            ->rgba()
+                                            ->regex(ThemeSettings::RGBA_PATTERN)
+                                            ->placeholder('rgba(0, 0, 0, 0.65)')
+                                            ->helperText('Leave empty for black at 65%.'),
+                                    ]),
                             ]),
                     ]),
             ]);

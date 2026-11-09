@@ -9,7 +9,9 @@ A slider shows a series of images one at a time, with arrows to move between the
 - **Seconds between slides**: how long each image shows before the next. Leave it empty to change slides only when the visitor clicks.
 - **Edge to edge on Landing pages**: on a page with the Landing layout, the slider runs the full width of the window, stacked between modules like a band and touching them. On other layouts it fills the content column as usual. Use images at least 1920 pixels wide. The image fills the width at its own shape, so its height follows from its proportions. After saving, a notice names any images under 1920 pixels wide and tells you if the slides aren't all the same shape, but the slider saves either way.
 - **Slides**: add an image to each slide, either picked from the [image library](images.md) or uploaded on the spot (it's added to the library). Drag slides to change their order.
-  - **Caption**: optional text shown over the bottom of the image.
+  - **Caption**: optional text shown over the image. Line breaks are kept.
+  - **Text position**: a banner at the bottom (the starting choice) or top, or a box about 40% wide at the left or right, centered vertically. On phones, a box at the side becomes a banner at the bottom.
+  - **Text color** and **Background color**: leave them empty for white text on black at 65%.
   - The image's alt text in the library is used for screen readers.
 
 An image used in a slider can't be deleted from the library until it's removed from the slider. The slider's arrow colors and animation speed can be adjusted on the Theme screen's **Slider** tab.

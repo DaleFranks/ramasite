@@ -8,8 +8,10 @@ use App\Models\Entry;
 use App\Models\Image;
 use App\Models\Module;
 use App\Models\Slider;
+use App\SlideCaptionPosition;
 use App\SliderAnimation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class SliderTest extends TestCase
@@ -58,6 +60,56 @@ class SliderTest extends TestCase
 
         $this->assertStringContainsString('class="slider animation-fade"', $html);
         $this->assertStringNotContainsString('data-seconds', $html);
+    }
+
+    /**
+     * @return array<string, array{SlideCaptionPosition, string}>
+     */
+    public static function captionPositionsAwayFromTheBottom(): array
+    {
+        return [
+            'top banner' => [SlideCaptionPosition::Top, 'caption-top'],
+            'left box' => [SlideCaptionPosition::Left, 'caption-left'],
+            'right box' => [SlideCaptionPosition::Right, 'caption-right'],
+        ];
+    }
+
+    #[DataProvider('captionPositionsAwayFromTheBottom')]
+    public function test_a_slide_caption_is_marked_with_its_position(SlideCaptionPosition $position, string $expectedClass): void
+    {
+        $slider = Slider::factory()->create();
+        $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'caption' => 'Hello', 'caption_position' => $position]);
+
+        $this->assertStringContainsString('<figcaption class="slide-caption '.$expectedClass.'">Hello</figcaption>', $slider->html());
+    }
+
+    public function test_a_slide_caption_uses_its_own_colors_when_set(): void
+    {
+        $slider = Slider::factory()->create();
+        $slider->slides()->create([
+            'image_id' => Image::factory()->create()->id,
+            'caption' => 'Hello',
+            'caption_text_color' => '#112233',
+            'caption_background_color' => 'rgba(10, 20, 30, 0.4)',
+        ]);
+
+        $this->assertStringContainsString('<figcaption class="slide-caption" style="color: #112233; background: rgba(10, 20, 30, 0.4)">Hello</figcaption>', $slider->html());
+    }
+
+    public function test_a_slide_caption_sets_only_the_color_it_was_given(): void
+    {
+        $slider = Slider::factory()->create();
+        $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'caption' => 'Hello', 'caption_background_color' => '#000000']);
+
+        $this->assertStringContainsString('<figcaption class="slide-caption" style="background: #000000">Hello</figcaption>', $slider->html());
+    }
+
+    public function test_a_slide_caption_keeps_line_breaks_and_escapes_html(): void
+    {
+        $slider = Slider::factory()->create();
+        $slider->slides()->create(['image_id' => Image::factory()->create()->id, 'caption' => "First <b>line</b>\nSecond line"]);
+
+        $this->assertStringContainsString("First &lt;b&gt;line&lt;/b&gt;<br />\nSecond line", $slider->html());
     }
 
     public function test_an_edge_to_edge_slider_is_marked_and_sits_directly_in_the_page(): void

@@ -8,6 +8,7 @@ use App\Filament\Resources\Sliders\Pages\ListSliders;
 use App\Models\Image;
 use App\Models\Slider;
 use App\Models\User;
+use App\SlideCaptionPosition;
 use App\SliderAnimation;
 use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -66,6 +67,48 @@ class SliderResourceTest extends TestCase
         $this->assertSame(6, $slider->seconds_per_slide);
         $this->assertSame([$first->id, $second->id], $slider->slides->pluck('image_id')->all());
         $this->assertSame('Our team', $slider->slides->first()->caption);
+    }
+
+    public function test_a_slide_saves_its_text_position_and_colors(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+        $slider = Slider::factory()->create();
+
+        Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
+            ->fillForm(['slides' => [[
+                'image_id' => Image::factory()->create()->id,
+                'caption' => "Line one\nLine two",
+                'caption_position' => SlideCaptionPosition::Left->value,
+                'caption_text_color' => '#112233',
+                'caption_background_color' => 'rgba(10, 20, 30, 0.4)',
+            ]]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $undoRepeaterFake();
+
+        $slide = $slider->slides()->sole();
+        $this->assertSame("Line one\nLine two", $slide->caption);
+        $this->assertSame(SlideCaptionPosition::Left, $slide->caption_position);
+        $this->assertSame('#112233', $slide->caption_text_color);
+        $this->assertSame('rgba(10, 20, 30, 0.4)', $slide->caption_background_color);
+    }
+
+    public function test_a_slide_rejects_colors_that_are_not_colors(): void
+    {
+        $undoRepeaterFake = Repeater::fake();
+        $slider = Slider::factory()->create();
+
+        Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
+            ->fillForm(['slides' => [[
+                'image_id' => Image::factory()->create()->id,
+                'caption_text_color' => 'red; position: fixed',
+                'caption_background_color' => 'url(x)',
+            ]]])
+            ->call('save')
+            ->assertHasFormErrors(['slides.0.caption_text_color', 'slides.0.caption_background_color']);
+
+        $undoRepeaterFake();
     }
 
     public function test_the_edge_to_edge_help_only_shows_once_it_is_selected(): void
