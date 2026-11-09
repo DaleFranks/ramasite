@@ -2509,7 +2509,7 @@ body.layout-landing .prose > :not(.module, .edge-to-edge):has(+ .slider.edge-to-
 
 /* Shaped band edges, Landing only. The mask cuts the band itself, so the page color
    shows through, and the band keeps its text clear of the cut and a space on that side.
-   Each mask is 100 wide by 85 tall, stretched across the window. */
+   Each mask is stretched to the window's width and the edge's height. */
 .module.edge-top-slant-left {
     --band-top-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 85' preserveAspectRatio='none'%3E%3Cpolygon points='0,0 100,85 0,85'/%3E%3C/svg%3E");
 }
@@ -2519,7 +2519,7 @@ body.layout-landing .prose > :not(.module, .edge-to-edge):has(+ .slider.edge-to-
 }
 
 .module.edge-top-wave {
-    --band-top-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 85' preserveAspectRatio='none'%3E%3Cpath d='M0 50C17 5 33 5 50 42S83 80 100 38V85H0Z'/%3E%3C/svg%3E");
+    --band-top-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 85' preserveAspectRatio='none'%3E%3Cpath d='M0 42.5C17-14.17 33-14.17 50 42.5S83 99.17 100 42.5V85H0Z'/%3E%3C/svg%3E");
 }
 
 .module.edge-bottom-slant-left {
@@ -2531,19 +2531,19 @@ body.layout-landing .prose > :not(.module, .edge-to-edge):has(+ .slider.edge-to-
 }
 
 .module.edge-bottom-wave {
-    --band-bottom-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 85' preserveAspectRatio='none'%3E%3Cpath d='M0 35C17 80 33 80 50 43S83 5 100 47V0H0Z'/%3E%3C/svg%3E");
+    --band-bottom-edge: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 85' preserveAspectRatio='none'%3E%3Cpath d='M0 42.5C17 99.17 33 99.17 50 42.5S83-14.17 100 42.5V0H0Z'/%3E%3C/svg%3E");
 }
 
 body.layout-landing .prose > .module.has-top-edge {
-    --band-top-edge-height: 85px;
-    margin-top: 70px;
-    padding-top: calc(64px + 85px);
+    --band-top-edge-height: 50px;
+    margin-top: 10px;
+    padding-top: calc(64px + var(--band-top-edge-height));
 }
 
 body.layout-landing .prose > .module.has-bottom-edge {
-    --band-bottom-edge-height: 85px;
-    margin-bottom: 70px;
-    padding-bottom: calc(64px + 85px);
+    --band-bottom-edge-height: 50px;
+    margin-bottom: 10px;
+    padding-bottom: calc(64px + var(--band-bottom-edge-height));
 }
 
 body.layout-landing .prose > .module:is(.has-top-edge, .has-bottom-edge) {
