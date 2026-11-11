@@ -7,7 +7,10 @@ use App\BoxStyle;
 use App\Models\Entry;
 use App\Models\Image;
 use App\Models\Module;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class ModuleShortcodeTest extends TestCase
@@ -112,5 +115,26 @@ class ModuleShortcodeTest extends TestCase
             ->assertOk()
             ->assertSee('<div class="module links-module">', false)
             ->assertSee('<a href="'.url('about').'">About</a>', false);
+    }
+
+    public function test_the_database_refuses_to_delete_an_image_a_module_uses_as_its_background(): void
+    {
+        $image = Image::factory()->create();
+        Module::factory()->create(['background_image_id' => $image->id]);
+
+        $this->expectException(QueryException::class);
+
+        DB::table('images')->where('id', $image->id)->delete();
+    }
+
+    public function test_the_constraint_update_clears_backgrounds_pointing_to_missing_images(): void
+    {
+        $migration = 'database/migrations/2026_11_11_070355_add_background_image_constraint_to_modules_table.php';
+        Artisan::call('migrate:rollback', ['--path' => $migration]);
+        $module = Module::factory()->create(['background_image_id' => 999]);
+
+        Artisan::call('migrate', ['--path' => $migration]);
+
+        $this->assertNull($module->refresh()->background_image_id);
     }
 }
