@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Sliders\Schemas;
 
+use App\Filament\InsertImageAction;
 use App\Filament\Pages\ThemeSettings;
 use App\Models\Image;
 use App\Models\Slider;
@@ -23,6 +24,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 class SliderForm
@@ -113,6 +115,8 @@ class SliderForm
                                 Select::make('image_id')
                                     ->label('Image')
                                     ->options(fn (): array => self::imageOptions())
+                                    ->getSearchResultsUsing(fn (string $search): array => self::imageSearchResults($search))
+                                    ->getOptionLabelUsing(fn (mixed $value): ?string => self::imageOptionLabel($value))
                                     ->allowHtml()
                                     ->searchable()
                                     ->required()
@@ -174,15 +178,45 @@ class SliderForm
     }
 
     /**
-     * Every library image, newest first, shown with a thumbnail.
+     * The newest library images, for an image select. Older ones are found
+     * by searching, so a large library isn't loaded for every slide.
      *
      * @return array<int, string>
      */
     public static function imageOptions(): array
     {
-        return Image::query()
-            ->latest()
-            ->get()
+        return once(fn (): array => self::labelled(Image::query()->latest()->limit(InsertImageAction::LISTED_IMAGES)->get()));
+    }
+
+    /**
+     * Library images whose name or alt text contains the search.
+     *
+     * @return array<int, string>
+     */
+    public static function imageSearchResults(string $search): array
+    {
+        return self::labelled(InsertImageAction::matching($search)->limit(InsertImageAction::LISTED_IMAGES)->get());
+    }
+
+    /**
+     * The label of a chosen image, which may be older than the listed ones.
+     */
+    public static function imageOptionLabel(mixed $value): ?string
+    {
+        $image = Image::query()->find($value);
+
+        return $image ? self::labelled(collect([$image]))[$image->id] : null;
+    }
+
+    /**
+     * A thumbnail beside each image's name.
+     *
+     * @param  Collection<int, Image>  $images
+     * @return array<int, string>
+     */
+    private static function labelled(Collection $images): array
+    {
+        return $images
             ->mapWithKeys(fn (Image $image): array => [
                 $image->id => '<span style="display:flex;align-items:center;gap:0.75rem">'
                     .'<img src="'.e($image->url()).'" alt="" loading="lazy" style="width:4rem;height:2.5rem;object-fit:cover;border-radius:0.25rem">'

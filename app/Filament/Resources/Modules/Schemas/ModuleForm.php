@@ -60,6 +60,8 @@ class ModuleForm
                         Select::make('background_image_id')
                             ->label('Background image')
                             ->options(fn (): array => SliderForm::imageOptions())
+                            ->getSearchResultsUsing(fn (string $search): array => SliderForm::imageSearchResults($search))
+                            ->getOptionLabelUsing(fn (mixed $value): ?string => SliderForm::imageOptionLabel($value))
                             ->allowHtml()
                             ->searchable()
                             ->placeholder('None')

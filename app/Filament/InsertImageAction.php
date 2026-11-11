@@ -36,7 +36,7 @@ class InsertImageAction
     /**
      * How many images the list shows at a time; searching reaches the rest.
      */
-    private const LISTED_IMAGES = 50;
+    public const LISTED_IMAGES = 50;
 
     /**
      * A full image address that a shortcode can hold: "|" and "]" would end it early.
@@ -164,9 +164,11 @@ class InsertImageAction
     }
 
     /**
+     * Images whose name or alt text contains the search, by name.
+     *
      * @return Builder<Image>
      */
-    private static function matching(string $search): Builder
+    public static function matching(string $search): Builder
     {
         return Image::query()
             ->where(fn (Builder $images): Builder => $images

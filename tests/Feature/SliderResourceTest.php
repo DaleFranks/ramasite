@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Filament\Resources\Sliders\Pages\CreateSlider;
 use App\Filament\Resources\Sliders\Pages\EditSlider;
 use App\Filament\Resources\Sliders\Pages\ListSliders;
+use App\Filament\Resources\Sliders\Schemas\SliderForm;
 use App\Models\Image;
 use App\Models\Slider;
 use App\Models\User;
@@ -66,6 +67,19 @@ class SliderResourceTest extends TestCase
         $this->assertSame(6, $slider->seconds_per_slide);
         $this->assertSame([$first->id, $second->id], $slider->slides->pluck('image_id')->all());
         $this->assertSame('Our team', $slider->slides->first()->caption);
+    }
+
+    public function test_image_choices_list_the_newest_images_and_search_finds_the_rest(): void
+    {
+        $oldest = Image::factory()->create(['filename' => 'harbour-sunset.jpg', 'created_at' => now()->subYear()]);
+        Image::factory()->count(60)->create();
+
+        $listed = SliderForm::imageOptions();
+        $this->assertCount(50, $listed);
+        $this->assertArrayNotHasKey($oldest->id, $listed);
+
+        $this->assertArrayHasKey($oldest->id, SliderForm::imageSearchResults('harbour'));
+        $this->assertStringContainsString('harbour-sunset.jpg', (string) SliderForm::imageOptionLabel($oldest->id));
     }
 
     public function test_a_slide_saves_its_text_position_and_colors(): void
