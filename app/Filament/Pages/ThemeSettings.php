@@ -13,6 +13,7 @@ use App\SiteNamePosition;
 use App\TextAlignment;
 use App\ThemeFonts;
 use App\ThemeOptions;
+use ArrayObject;
 use BackedEnum;
 use DateTimeZone;
 use Filament\Actions\Action;
@@ -467,26 +468,45 @@ class ThemeSettings extends Page
 
     /**
      * A theme made from the form as it stands, so the "Automatic" hints follow
-     * the main colors as they're changed, before saving.
+     * the main colors as they're changed, before saving. Every hint and font
+     * sample asks for it, so it's built once per request for each set of
+     * form values rather than once per field.
      */
     private static function previewTheme(Get $get): Theme
     {
+        $colors = ['color_primary', 'color_secondary', 'color_background', 'color_text', 'color_card_background', 'color_header_background'];
+        $values = [
+            ...collect($colors)->mapWithKeys(fn (string $color): array => [$color => $get($color)])->all(),
+            'font_body' => $get('font_body'),
+            'font_headings' => $get('font_headings'),
+            'site_name_position' => $get('site_name_position'),
+            'options' => array_filter((array) $get('options'), 'filled'),
+        ];
+
+        /** @var ArrayObject<string, Theme> $previews */
+        $previews = once(fn (): ArrayObject => new ArrayObject);
+        $key = serialize($values);
+
+        if (isset($previews[$key])) {
+            return $previews[$key];
+        }
+
         $saved = Theme::current();
         $theme = $saved->replicate();
 
-        foreach (['color_primary', 'color_secondary', 'color_background', 'color_text', 'color_card_background', 'color_header_background'] as $color) {
-            $value = $get($color);
+        foreach ($colors as $color) {
+            $value = $values[$color];
             $theme->{$color} = is_string($value) && preg_match(self::HEX_PATTERN, $value) ? $value : $saved->{$color};
         }
 
-        $theme->font_body = (string) ($get('font_body') ?: $saved->font_body);
-        $theme->font_headings = (string) ($get('font_headings') ?: $saved->font_headings);
+        $theme->font_body = (string) ($values['font_body'] ?: $saved->font_body);
+        $theme->font_headings = (string) ($values['font_headings'] ?: $saved->font_headings);
 
-        $position = $get('site_name_position');
+        $position = $values['site_name_position'];
         $theme->site_name_position = $position instanceof SiteNamePosition ? $position : (SiteNamePosition::tryFrom((string) $position) ?? $saved->site_name_position);
-        $theme->options = array_filter((array) $get('options'), 'filled');
+        $theme->options = $values['options'];
 
-        return $theme;
+        return $previews[$key] = $theme;
     }
 
     /**

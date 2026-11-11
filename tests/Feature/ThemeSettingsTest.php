@@ -7,6 +7,7 @@ use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -71,6 +72,17 @@ class ThemeSettingsTest extends TestCase
             ->assertHasNoFormErrors();
 
         $this->assertSame('America/Los_Angeles', Theme::current()->timezone);
+    }
+
+    public function test_the_theme_screen_looks_up_the_saved_theme_only_a_few_times(): void
+    {
+        $this->actingAs(User::factory()->create());
+        DB::enableQueryLog();
+
+        Livewire::test(ThemeSettings::class)->set('data.color_primary', '#123456');
+
+        $themeQueries = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'from "themes"'));
+        $this->assertLessThanOrEqual(10, $themeQueries->count());
     }
 
     public function test_a_color_must_be_a_hex_code(): void
