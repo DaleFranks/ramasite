@@ -63,6 +63,15 @@ class FormSubmissionTest extends TestCase
             ->assertDontSee('<form class="site-form', false);
     }
 
+    public function test_a_submission_sent_at_a_set_time_is_saved_with_that_time(): void
+    {
+        $this->travelTo('2026-10-01 09:00:00');
+
+        $this->post('/forms/contact', $this->sentByVisitor(['your_name' => 'Ann Smith', 'email' => 'ann@example.com']));
+
+        $this->assertSame('2026-10-01 09:00:00', FormSubmission::query()->sole()->created_at->toDateTimeString());
+    }
+
     public function test_mistakes_are_shown_under_their_fields_with_the_answers_kept(): void
     {
         $this->from('/contact-us')
