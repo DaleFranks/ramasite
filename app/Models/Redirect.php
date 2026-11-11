@@ -70,9 +70,17 @@ class Redirect extends Model
      */
     public static function normalizePath(?string $path): string
     {
-        $path = (string) parse_url(rawurldecode(trim((string) $path)), PHP_URL_PATH);
+        $path = trim((string) $path);
 
-        return Str::lower(trim($path, '/'));
+        // Only a full address goes through parse_url(): on a bare path it reads
+        // a colon, as in "item:12", as the start of a port number.
+        if (preg_match('#^[a-z][a-z0-9+.-]*://#i', $path)) {
+            $path = (string) parse_url($path, PHP_URL_PATH);
+        }
+
+        $path = Str::before(Str::before($path, '?'), '#');
+
+        return Str::lower(trim(rawurldecode($path), '/'));
     }
 
     /**

@@ -61,6 +61,17 @@ class RedirectTest extends TestCase
         $this->get('/img/logos/webdev.png')->assertRedirect(url('/uploads/theme/webdev.png'));
     }
 
+    public function test_addresses_with_a_colon_still_match(): void
+    {
+        Redirect::factory()->create(['from_path' => 'shop/*', 'to' => '/store/*']);
+        Redirect::factory()->create(['from_path' => 'a:80', 'to' => '/port']);
+
+        $this->get('/shop/item:12')->assertRedirect(url('/store/item:12'));
+        $this->get('/a:80')->assertRedirect(url('/port'));
+        $this->assertSame('a:80', Redirect::normalizePath('/a:80?x=1'));
+        $this->assertSame('old-page', Redirect::normalizePath('https://example.com/Old-Page/'));
+    }
+
     public function test_a_published_page_always_wins_over_a_redirect(): void
     {
         Entry::factory()->published()->create(['slug' => 'services', 'title' => 'Our services']);
