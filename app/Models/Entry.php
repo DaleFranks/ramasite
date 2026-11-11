@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
@@ -105,6 +106,17 @@ class Entry extends Model
         static::deleting(function (Entry $entry): bool {
             return ! $entry->posts()->exists();
         });
+    }
+
+    /**
+     * Saved in one transaction, because a blog that moves re-saves its posts:
+     * if one of them can't move, the blog and every post stay where they were.
+     *
+     * @param  array<string, mixed>  $options
+     */
+    public function save(array $options = []): bool
+    {
+        return DB::transaction(fn (): bool => parent::save($options));
     }
 
     /**

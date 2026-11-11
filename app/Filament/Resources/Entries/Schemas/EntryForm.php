@@ -70,6 +70,14 @@ class EntryForm
 
                                         if (self::isPathTaken($path, $record)) {
                                             $fail("The address /{$path} is already used by another entry.");
+
+                                            return;
+                                        }
+
+                                        $clashingPostPath = self::clashingPostPath($path, $record);
+
+                                        if ($clashingPostPath !== null) {
+                                            $fail("A post in this blog would move to /{$clashingPostPath}, which is already used by another entry.");
                                         }
                                     })
                                     ->helperText(fn (Get $get): string => self::isPost($get)
@@ -255,6 +263,24 @@ class EntryForm
             ->where('path', $path)
             ->when($record, fn (Builder $query) => $query->whereKeyNot($record->getKey()))
             ->exists();
+    }
+
+    /**
+     * When a blog moves to a new address its posts move with it. The first of
+     * their new addresses that another entry already uses, if any.
+     */
+    private static function clashingPostPath(string $path, ?Entry $record): ?string
+    {
+        if ($record?->type !== EntryType::Blog || $path === $record->path) {
+            return null;
+        }
+
+        $newPostPaths = $record->posts()->pluck('slug')->map(fn (string $slug): string => $path.'/'.$slug);
+
+        return Entry::query()
+            ->whereIn('path', $newPostPaths)
+            ->where(fn (Builder $query) => $query->whereNull('blog_id')->orWhere('blog_id', '!=', $record->getKey()))
+            ->value('path');
     }
 
     private static function isPost(Get $get): bool

@@ -392,6 +392,21 @@ class EntryResourceTest extends TestCase
             ->assertHasFormErrors(['slug']);
     }
 
+    public function test_a_blog_cant_move_to_where_one_of_its_posts_would_clash(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $blog = Entry::factory()->blog()->create(['slug' => 'news']);
+        Entry::factory()->post($blog)->create(['slug' => 'welcome']);
+        Entry::factory()->create(['slug' => 'blog/welcome']);
+
+        Livewire::test(EditEntry::class, ['record' => $blog->getRouteKey()])
+            ->fillForm(['slug' => 'blog'])
+            ->call('save')
+            ->assertHasFormErrors(['slug']);
+
+        $this->assertSame('news', $blog->refresh()->path);
+    }
+
     public function test_a_blog_with_posts_cannot_be_deleted(): void
     {
         $this->actingAs(User::factory()->create());

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\EntryStatus;
 use App\EntryType;
 use App\Models\Entry;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -56,6 +57,24 @@ class EntryTest extends TestCase
 
         $this->assertSame('articles/hello', $post->refresh()->path);
         $this->assertSame($otherPost->blog->slug.'/hello', $otherPost->refresh()->path);
+    }
+
+    public function test_a_blog_whose_posts_cant_move_stays_where_it_was_with_all_its_posts(): void
+    {
+        $blog = Entry::factory()->blog()->create(['slug' => 'news']);
+        $first = Entry::factory()->post($blog)->create(['slug' => 'first']);
+        $clashing = Entry::factory()->post($blog)->create(['slug' => 'welcome']);
+        Entry::factory()->create(['slug' => 'blog/welcome']);
+
+        try {
+            $blog->update(['slug' => 'blog']);
+            $this->fail('The clashing post should have stopped the move.');
+        } catch (QueryException) {
+        }
+
+        $this->assertSame('news', $blog->refresh()->path);
+        $this->assertSame('news/first', $first->refresh()->path);
+        $this->assertSame('news/welcome', $clashing->refresh()->path);
     }
 
     public function test_an_entry_that_is_not_a_post_has_no_blog(): void
