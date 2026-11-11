@@ -41,6 +41,7 @@ class DraftPreviewTest extends TestCase
     public function test_a_scheduled_entry_says_when_it_will_appear(): void
     {
         $this->actingAs(User::factory()->create());
+        $this->travelTo('2026-06-01 12:00:00');
         Entry::factory()->published()->create(['slug' => 'launch', 'published_at' => '2030-03-04 09:30:00']);
 
         $this->get('/launch')
@@ -52,6 +53,7 @@ class DraftPreviewTest extends TestCase
     {
         $this->actingAs(User::factory()->create());
         Theme::current()->update(['timezone' => 'America/Los_Angeles']);
+        $this->travelTo('2026-06-01 12:00:00');
         Entry::factory()->published()->create(['slug' => 'launch', 'published_at' => '2030-03-04 17:30:00']);
 
         $this->get('/launch')->assertSee('This page will appear on the site on March 4, 2030 at 9:30 am.');
