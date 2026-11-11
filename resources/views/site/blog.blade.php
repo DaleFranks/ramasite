@@ -29,7 +29,7 @@
                     <a href="{{ $post->url() }}">{{ $post->title }}</a>
                 </h2>
                 @if ($post->published_at)
-                    <div class="feed-date">{{ $post->published_at->format('F j, Y') }}</div>
+                    <div class="feed-date">{{ \App\Models\Theme::localTime($post->published_at)->format('F j, Y') }}</div>
                 @endif
                 <p class="feed-excerpt">{{ $post->excerpt() }}</p>
                 <a href="{{ $post->url() }}" class="read-more">Read More &raquo;</a>

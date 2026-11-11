@@ -467,7 +467,9 @@ class Entry extends Model
         }
 
         if (! $this->isPublished()) {
-            return "This {$kind} will appear on the site on {$this->published_at->format('F j, Y \\a\\t g:i a')}.";
+            $appearsAt = Theme::localTime($this->published_at)->format('F j, Y \\a\\t g:i a');
+
+            return "This {$kind} will appear on the site on {$appearsAt}.";
         }
 
         return "This post's blog isn't on the site yet, so visitors can't see the post.";

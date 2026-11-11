@@ -7,6 +7,7 @@ use App\Filament\Resources\Entries\Pages\EditEntry;
 use App\Filament\Resources\Entries\Pages\ListEntries;
 use App\Models\Entry;
 use App\Models\Redirect;
+use App\Models\Theme;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -45,6 +46,25 @@ class DraftPreviewTest extends TestCase
         $this->get('/launch')
             ->assertOk()
             ->assertSee('This page will appear on the site on March 4, 2030 at 9:30 am.');
+    }
+
+    public function test_a_scheduled_entry_says_when_it_will_appear_in_the_site_timezone(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Theme::current()->update(['timezone' => 'America/Los_Angeles']);
+        Entry::factory()->published()->create(['slug' => 'launch', 'published_at' => '2030-03-04 17:30:00']);
+
+        $this->get('/launch')->assertSee('This page will appear on the site on March 4, 2030 at 9:30 am.');
+    }
+
+    public function test_a_post_shows_its_date_in_the_site_timezone(): void
+    {
+        Theme::current()->update(['timezone' => 'America/Los_Angeles']);
+        $blog = Entry::factory()->blog()->published()->create(['slug' => 'news']);
+        Entry::factory()->post($blog)->published()->create(['slug' => 'late', 'published_at' => '2026-03-05 03:00:00']);
+
+        $this->get('/news/late')->assertSee('March 4, 2026');
+        $this->get('/news')->assertSee('March 4, 2026');
     }
 
     public function test_a_draft_home_page_can_be_previewed(): void

@@ -56,6 +56,23 @@ class ThemeSettingsTest extends TestCase
         $this->assertSame('#111111', $options['footer_dark_background'] ?? null);
     }
 
+    public function test_the_site_timezone_is_saved_and_must_be_a_real_timezone(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ThemeSettings::class)
+            ->fillForm(['timezone' => 'Mars/Olympus_Mons'])
+            ->call('save')
+            ->assertHasFormErrors(['timezone']);
+
+        Livewire::test(ThemeSettings::class)
+            ->fillForm(['timezone' => 'America/Los_Angeles'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('America/Los_Angeles', Theme::current()->timezone);
+    }
+
     public function test_a_color_must_be_a_hex_code(): void
     {
         $this->actingAs(User::factory()->create());

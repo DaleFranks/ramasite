@@ -9,6 +9,7 @@ use App\Filament\Resources\Entries\Pages\CreateEntry;
 use App\Filament\Resources\Entries\Pages\EditEntry;
 use App\Filament\Resources\Entries\Pages\ListEntries;
 use App\Models\Entry;
+use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -53,6 +54,26 @@ class EntryResourceTest extends TestCase
         $this->assertSame("## Hello\n\nSome **Markdown**.", $entry->body);
         $this->assertSame(EntryStatus::Published, $entry->status);
         $this->assertTrue($entry->author->is($user));
+    }
+
+    public function test_a_publish_date_is_entered_in_the_site_timezone_and_stored_in_utc(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Theme::current()->update(['timezone' => 'America/Los_Angeles']);
+
+        Livewire::test(CreateEntry::class)
+            ->fillForm([
+                'title' => 'Launch',
+                'slug' => 'launch',
+                'body' => 'Soon.',
+                'type' => EntryType::Page->value,
+                'status' => EntryStatus::Published->value,
+                'published_at' => '2026-12-01 09:00:00',
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('2026-12-01 17:00:00', Entry::sole()->published_at->toDateTimeString());
     }
 
     public function test_the_slug_is_filled_in_from_the_title_when_creating(): void

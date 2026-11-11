@@ -14,6 +14,7 @@ use App\TextAlignment;
 use App\ThemeFonts;
 use App\ThemeOptions;
 use BackedEnum;
+use DateTimeZone;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\Field;
@@ -118,6 +119,12 @@ class ThemeSettings extends Page
                                 TextInput::make('site_name')
                                     ->required()
                                     ->maxLength(100),
+                                Select::make('timezone')
+                                    ->helperText('Publish dates are entered in this timezone, and dates on the site, in the admin and in form emails are shown in it.')
+                                    ->options(array_combine(DateTimeZone::listIdentifiers(), DateTimeZone::listIdentifiers()))
+                                    ->searchable()
+                                    ->required()
+                                    ->in(DateTimeZone::listIdentifiers()),
                                 FileUpload::make('logo_path')
                                     ->label('Logo')
                                     ->image()
@@ -334,7 +341,7 @@ class ThemeSettings extends Page
             ->label('Reset to defaults')
             ->color('gray')
             ->requiresConfirmation()
-            ->modalDescription('All theme settings except the site name go back to the original look, every detailed setting goes back to automatic, and the logo and browser tab icon are removed.')
+            ->modalDescription('All theme settings except the site name and timezone go back to the original look, every detailed setting goes back to automatic, and the logo and browser tab icon are removed.')
             ->action(function (): void {
                 $theme = Theme::current();
                 $theme->resetToDefaults();

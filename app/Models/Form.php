@@ -245,7 +245,7 @@ class Form extends Model
 
             foreach ($submissions as $submission) {
                 fputcsv($output, [
-                    $submission->created_at->toDateTimeString(),
+                    Theme::localTime($submission->created_at)->toDateTimeString(),
                     ...$columns->keys()->map(fn (string $key): string => self::safeForSpreadsheets($submission->answerText($key)))->all(),
                 ], escape: '');
             }

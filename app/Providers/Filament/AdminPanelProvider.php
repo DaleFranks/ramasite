@@ -16,6 +16,7 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Support\Facades\FilamentTimezone;
 use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
 use Illuminate\Contracts\View\View;
@@ -35,6 +36,8 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            // Dates in the admin are shown and entered in the site's timezone; they're stored in UTC
+            ->bootUsing(fn () => FilamentTimezone::set(Theme::siteTimezone()))
             // "RamaSite Admin: <site name>" at the top of every admin page and in its tab title
             ->brandName(fn (): string => self::brandName())
             // The RamaSite mark beside that name, and as the admin's tab icon

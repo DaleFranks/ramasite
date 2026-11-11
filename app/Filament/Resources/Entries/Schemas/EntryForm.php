@@ -8,6 +8,7 @@ use App\EntryStatus;
 use App\EntryType;
 use App\Models\Entry;
 use App\Models\Image;
+use App\Models\Theme;
 use Closure;
 use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\Hidden;
@@ -137,7 +138,8 @@ class EntryForm
                                     ->required(),
                                 DateTimePicker::make('published_at')
                                     ->label('Publish date')
-                                    ->helperText('Leave empty to publish immediately.'),
+                                    ->helperText('Leave empty to publish immediately.')
+                                    ->timezone(fn (): string => Theme::siteTimezone()),
                             ]),
                         Section::make('Layout')
                             ->schema([

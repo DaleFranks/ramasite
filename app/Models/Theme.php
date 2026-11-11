@@ -9,6 +9,7 @@ use App\SiteNamePosition;
 use App\TextAlignment;
 use App\ThemeFonts;
 use App\ThemeOptions;
+use Carbon\CarbonInterface;
 use Closure;
 use Database\Factories\ThemeFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -24,6 +25,7 @@ use Illuminate\Support\Str;
  */
 #[Fillable([
     'site_name',
+    'timezone',
     'site_name_position',
     'logo_path',
     'favicon_path',
@@ -108,16 +110,35 @@ class Theme extends Model
     public static function current(): self
     {
         return self::query()->oldest('id')->firstOr(
+            // Reloaded so it has the columns' own defaults, such as the timezone
             fn (): self => self::query()->create([
                 ...self::DEFAULTS,
                 'site_name' => config('app.name'),
-            ]),
+            ])->refresh(),
         );
     }
 
     /**
      * Put every setting except the site name back to the original look.
      */
+    /**
+     * The timezone dates are shown and entered in, chosen on the Theme screen.
+     * Times are stored in UTC whatever it is, so changing it never moves the
+     * moment a post appears.
+     */
+    public static function siteTimezone(): string
+    {
+        return once(fn (): string => self::current()->timezone ?: 'UTC');
+    }
+
+    /**
+     * A stored time, as the site's visitors and admins should see it.
+     */
+    public static function localTime(CarbonInterface $time): CarbonInterface
+    {
+        return $time->copy()->setTimezone(self::siteTimezone());
+    }
+
     public function resetToDefaults(): void
     {
         $this->update(self::DEFAULTS);

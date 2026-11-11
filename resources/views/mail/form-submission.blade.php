@@ -1,5 +1,5 @@
 {{-- Plain text, so answers are output as typed rather than HTML-escaped --}}
-Someone sent the "{!! $submission->form->name !!}" form on {!! $submission->created_at->format('F j, Y \a\t g:i a') !!}.
+Someone sent the "{!! $submission->form->name !!}" form on {!! \App\Models\Theme::localTime($submission->created_at)->format('F j, Y \a\t g:i a') !!}.
 
 @foreach ($submission->answers as $key => $answer)
 {!! $answer['label'] ?? $key !!}:

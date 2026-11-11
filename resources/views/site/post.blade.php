@@ -16,7 +16,7 @@
 
     @if ($entry->published_at)
         <div class="post-meta">
-            Published on <time datetime="{{ $entry->published_at->toDateString() }}">{{ $entry->published_at->format('F j, Y') }}</time>
+            Published on <time datetime="{{ \App\Models\Theme::localTime($entry->published_at)->toDateString() }}">{{ \App\Models\Theme::localTime($entry->published_at)->format('F j, Y') }}</time>
         </div>
     @endif
 

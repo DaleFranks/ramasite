@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Forms\RelationManagers;
 
 use App\Models\Form;
 use App\Models\FormSubmission;
+use App\Models\Theme;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -64,7 +65,7 @@ class SubmissionsRelationManager extends RelationManager
             ])
             ->recordActions([
                 ViewAction::make()
-                    ->modalHeading(fn (FormSubmission $record): string => 'Sent '.$record->created_at->format('F j, Y \a\t g:i a'))
+                    ->modalHeading(fn (FormSubmission $record): string => 'Sent '.Theme::localTime($record->created_at)->format('F j, Y \a\t g:i a'))
                     ->schema(fn (FormSubmission $record): array => collect($record->answers)
                         ->map(fn (array $answer, string $key): TextEntry => TextEntry::make('answer_'.$key)
                             ->label($answer['label'] ?? $key)
