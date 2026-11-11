@@ -23,13 +23,28 @@ class BackupTest extends TestCase
     /** Not RefreshDatabase: its wrapping transaction would stop SQLite taking the snapshot. */
     use DatabaseMigrations;
 
+    private string $storagePath;
+
     private ?string $zipPath = null;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // A storage folder of its own, so the real site's backups are never touched or counted
+        $this->storagePath = sys_get_temp_dir().'/ramasite-backup-'.bin2hex(random_bytes(4));
+        File::ensureDirectoryExists($this->storagePath.'/app');
+        File::ensureDirectoryExists($this->storagePath.'/framework/cache/data');
+        $this->app->useStoragePath($this->storagePath);
+
+        // A stand-in settings file, so the real .env is never copied into a test zip
+        $this->app->useEnvironmentPath($this->storagePath);
+        File::put($this->storagePath.'/.env', "APP_NAME=Test\n");
+    }
 
     protected function tearDown(): void
     {
-        if ($this->zipPath !== null) {
-            File::delete($this->zipPath);
-        }
+        File::deleteDirectory($this->storagePath);
 
         parent::tearDown();
     }
@@ -50,7 +65,7 @@ class BackupTest extends TestCase
         $this->assertStringContainsString('To restore the site', (string) $zip->getFromName('RESTORING.txt'));
         $this->assertStringContainsString('Made with '.Version::label().'.', (string) $zip->getFromName('RESTORING.txt'));
         $this->assertSame(DatabaseUpdate::appliedVersion()."\n", $zip->getFromName('storage/app/database-version'));
-        $this->assertSame(File::exists(base_path('.env')), $zip->locateName('.env') !== false);
+        $this->assertSame("APP_NAME=Test\n", $zip->getFromName('.env'));
 
         $database = tempnam(sys_get_temp_dir(), 'backup-test');
         file_put_contents($database, $zip->getFromName('database/database.sqlite'));

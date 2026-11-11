@@ -95,8 +95,8 @@ class Backup
 
             $zip->addFile($snapshotPath, 'database/database.sqlite');
 
-            if (File::exists(base_path('.env'))) {
-                $zip->addFile(base_path('.env'), '.env');
+            if (File::exists(app()->environmentFilePath())) {
+                $zip->addFile(app()->environmentFilePath(), '.env');
             }
 
             // Which database changes the copy has, so restoring it onto a newer CMS updates it
