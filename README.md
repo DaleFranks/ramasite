@@ -51,7 +51,7 @@ If you have Composer and PHP on the machine that will run the site, you can inst
 composer create-project dalefranks/ramasite mysite --no-dev
 ```
 
-That fetches the same files as the release zip, with the `vendor` folder, and prepares the settings file and database. Put the `mysite` folder where your web server serves it, then carry on from step 3. To upgrade later, upload a newer release zip's files over it, as below.
+That fetches the same files as the release zip, with the `vendor` folder. As with the zip, the site writes its settings file and creates its database on its first visit. Put the `mysite` folder where your web server serves it, then carry on from step 3. To upgrade later, upload a newer release zip's files over it, as below.
 
 ## Upgrading
 
