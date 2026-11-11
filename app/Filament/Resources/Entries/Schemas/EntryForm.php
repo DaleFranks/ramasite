@@ -184,7 +184,12 @@ class EntryForm
                             ->schema([
                                 Select::make('parent_id')
                                     ->label('Parent')
-                                    ->relationship('parent', 'title', ignoreRecord: true)
+                                    ->relationship(
+                                        'parent',
+                                        'title',
+                                        modifyQueryUsing: fn (Builder $query, ?Entry $record) => $query->whereKeyNot($record?->descendantIds() ?? []),
+                                        ignoreRecord: true,
+                                    )
                                     ->searchable()
                                     ->preload(),
                                 TextInput::make('nav_order')

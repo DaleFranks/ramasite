@@ -440,6 +440,30 @@ class Entry extends Model
     }
 
     /**
+     * The ids of everything under this entry: its children, theirs in turn,
+     * and a blog's posts. None of them can be its parent, or the menu would
+     * loop and leave them all out.
+     *
+     * @return list<int>
+     */
+    public function descendantIds(): array
+    {
+        $found = [];
+        $level = [$this->getKey()];
+
+        while ($level !== []) {
+            $level = Entry::query()
+                ->where(fn (Builder $query) => $query->whereIn('parent_id', $level)->orWhereIn('blog_id', $level))
+                ->whereKeyNot([$this->getKey(), ...$found])
+                ->pluck('id')
+                ->all();
+            $found = [...$found, ...$level];
+        }
+
+        return $found;
+    }
+
+    /**
      * Whether the entry is published and its publish date has arrived: the
      * published() scope's test, for an entry that's already loaded.
      */

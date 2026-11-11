@@ -407,6 +407,30 @@ class EntryResourceTest extends TestCase
         $this->assertSame('news', $blog->refresh()->path);
     }
 
+    public function test_an_entrys_own_children_and_posts_cant_be_chosen_as_its_parent(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $services = Entry::factory()->blog()->create(['slug' => 'services']);
+        $design = Entry::factory()->create(['slug' => 'design', 'parent_id' => $services->id]);
+        $logos = Entry::factory()->create(['slug' => 'logos', 'parent_id' => $design->id]);
+        $post = Entry::factory()->post($services)->create(['slug' => 'news']);
+        $other = Entry::factory()->create(['slug' => 'about']);
+
+        foreach ([$design, $logos, $post] as $descendant) {
+            Livewire::test(EditEntry::class, ['record' => $services->getRouteKey()])
+                ->fillForm(['parent_id' => $descendant->id])
+                ->call('save')
+                ->assertHasFormErrors(['parent_id']);
+        }
+
+        Livewire::test(EditEntry::class, ['record' => $services->getRouteKey()])
+            ->fillForm(['parent_id' => $other->id])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertTrue($services->refresh()->parent->is($other));
+    }
+
     public function test_a_blog_with_posts_cannot_be_deleted(): void
     {
         $this->actingAs(User::factory()->create());
