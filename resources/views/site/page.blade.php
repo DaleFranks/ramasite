@@ -9,9 +9,7 @@
     :edit-url="$editUrl"
     :current-path="$entry->path"
 >
-    @if ($entry->layout->showsTitle())
-        <h1 class="page-title">{{ $entry->title }}</h1>
-    @endif
+    <h1 @class(['page-title', 'visually-hidden' => ! $entry->showsTitle()])>{{ $entry->title }}</h1>
 
     <article class="prose">
         {!! $entry->bodyHtml() !!}

@@ -33,6 +33,7 @@ use Illuminate\Support\Str;
     'blog_id',
     'body',
     'layout',
+    'show_title',
     'status',
     'published_at',
     'nav_order',
@@ -130,6 +131,7 @@ class Entry extends Model
             'type' => EntryType::class,
             'status' => EntryStatus::class,
             'layout' => EntryLayout::class,
+            'show_title' => 'boolean',
             'published_at' => 'datetime',
             'nav_order' => 'integer',
             'posts_per_page' => 'integer',
@@ -196,6 +198,16 @@ class Entry extends Model
             ->where('type', EntryType::Blog)
             ->orderBy('title')
             ->get(['id', 'type', 'title', 'path']);
+    }
+
+    /**
+     * Whether the title shows at the top of the page. Every layout shows it
+     * except Landing, which shows it only when the page's switch is on;
+     * otherwise it's still there for search engines and screen readers.
+     */
+    public function showsTitle(): bool
+    {
+        return $this->layout?->showsTitle() !== false || (bool) $this->show_title;
     }
 
     /**

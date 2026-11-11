@@ -10,9 +10,7 @@
     :edit-url="$editUrl"
     :current-path="$entry->blog->path"
 >
-    @if ($entry->layout->showsTitle())
-        <h1 class="page-title">{{ $entry->title }}</h1>
-    @endif
+    <h1 @class(['page-title', 'visually-hidden' => ! $entry->showsTitle()])>{{ $entry->title }}</h1>
 
     @if ($entry->published_at)
         <div class="post-meta">

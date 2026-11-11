@@ -28,7 +28,7 @@ enum EntryLayout: string implements HasDescription, HasLabel
         return match ($this) {
             self::Standard => 'The title, then the content in a column as wide as set on the Theme screen.',
             self::FullWidth => 'The title, then the content as wide as the header.',
-            self::Landing => 'No title. Modules stretch across the whole window as bands, so start with a module that has its own heading.',
+            self::Landing => 'Modules stretch across the whole window as bands. The title is hidden unless it\'s switched on below, so start with a slider or a module that has its own heading.',
         };
     }
 

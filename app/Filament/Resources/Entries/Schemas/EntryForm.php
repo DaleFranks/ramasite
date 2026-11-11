@@ -15,6 +15,7 @@ use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
@@ -159,6 +160,10 @@ class EntryForm
                                     ->required()
                                     ->live()
                                     ->helperText(fn (Get $get): ?string => self::layout($get)?->getDescription()),
+                                Toggle::make('show_title')
+                                    ->label('Show title')
+                                    ->helperText('Shows the title at the top of the page, above the content. When off, it\'s still there for search engines and screen readers.')
+                                    ->visible(fn (Get $get): bool => self::layout($get) === EntryLayout::Landing),
                             ]),
                         Section::make('Blog')
                             ->visible(fn (Get $get): bool => self::isBlog($get))
