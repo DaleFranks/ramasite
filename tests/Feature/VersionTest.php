@@ -80,8 +80,13 @@ class VersionTest extends TestCase
 
     public function test_the_site_compiles_templates_into_the_versions_folder(): void
     {
-        $this->assertStringContainsString(
-            '/storage/framework/views/development/',
+        // The folder is chosen from the real VERSION file when the app starts, before
+        // setUp() swaps the base path, so it's read from the config rather than assumed
+        $versionFolder = config('view.compiled');
+
+        $this->assertStringEndsWith('/storage/framework/views', dirname($versionFolder));
+        $this->assertStringStartsWith(
+            $versionFolder.'/',
             app('blade.compiler')->getCompiledPath(resource_path('views/errors/404.blade.php')),
         );
     }
