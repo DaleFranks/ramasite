@@ -26,7 +26,7 @@ Some addresses are used by the CMS itself and can't be taken: `admin`, `setup`, 
 ## Publishing
 
 - **Status**: **Draft** pages are hidden from visitors; **Published** ones are on the site.
-- **Publish date**: leave it empty to publish straight away. A date in the future schedules the page or post: it appears on its own at that time. For posts, the date is shown with the post and in the blog's list.
+- **Publish date**: leave it empty to publish straight away. A date in the future schedules the page or post: it appears on its own at that time. For posts, the date is shown with the post and in the blog's list. Dates are entered and shown in the site's timezone, set on the [Theme](theme.md) screen.
 
 ### Previewing
 
@@ -40,7 +40,7 @@ When a published page's address changes (its slug, or its blog's), a [redirect](
 
 - **Standard**: the title, then the content in a column as wide as set on the Theme screen.
 - **Full width**: the title, then the content as wide as the header.
-- **Landing**: no title, and modules stretch across the whole window as bands. Start the page with a module that has its own heading.
+- **Landing**: modules stretch across the whole window as bands. The title is hidden unless **Show title** is switched on, so start the page with a slider or a module that has its own heading. When hidden, the title is still there for search engines and screen readers. With **Show title** on, it shows above the content in the text column, as on other layouts.
 
 ## The menu
 

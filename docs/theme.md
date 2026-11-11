@@ -4,7 +4,7 @@ The Theme screen sets how the whole site looks. There's no template code to edit
 
 Most settings start **empty, meaning automatic**: their value is worked out from the main colors and fonts, and the grey "Auto: …" text in each box shows what that currently is. Type a value to override just that setting; clear it to go back to automatic. So a site looks right with only the main settings chosen.
 
-**Reset to defaults** puts everything back to the original look and removes the logo and tab icon. It keeps the site name and the top bar's text.
+**Reset to defaults** puts everything back to the original look and removes the logo and tab icon. It keeps the site name, the timezone and the top bar's text.
 
 If the settings have changed since you opened the screen, in another browser tab or by another admin, **Save** stops and asks what to do. **Load the latest settings** discards what you've changed on this screen. **Save my version anyway** replaces everything with what's on this screen.
 
@@ -16,6 +16,7 @@ If the settings have changed since you opened the screen, in another browser tab
 
 **Branding**
 - **Site name**: shown in the header (unless hidden), in browser tabs ("Page | Site name"), as the logo's description, and as the "From" name on email.
+- **Timezone**: publish dates are entered in this timezone, and dates on the site, in the admin and in form emails are shown in it. It starts as UTC; choose your own, such as America/Los_Angeles for Pacific time. Changing it never moves when a scheduled page appears, but check the times of any already-scheduled pages afterwards, because they'll now show in the new timezone.
 - **Logo** and **Browser tab icon** (a small square image).
 - Logo height, maximum width, and whether it tilts slightly when pointed at.
 
