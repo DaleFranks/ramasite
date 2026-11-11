@@ -41,6 +41,21 @@ class ThemeSettingsTest extends TestCase
         $this->assertSame('light', $theme->footer_style->value);
     }
 
+    public function test_switching_footer_style_keeps_the_colors_chosen_for_the_other_styles(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Theme::current()->update(['footer_style' => 'light', 'options' => ['footer_light_background' => '#eeeeee']]);
+
+        Livewire::test(ThemeSettings::class)
+            ->fillForm(['footer_style' => 'dark', 'options.footer_dark_background' => '#111111'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $options = Theme::current()->options;
+        $this->assertSame('#eeeeee', $options['footer_light_background'] ?? null);
+        $this->assertSame('#111111', $options['footer_dark_background'] ?? null);
+    }
+
     public function test_a_color_must_be_a_hex_code(): void
     {
         $this->actingAs(User::factory()->create());

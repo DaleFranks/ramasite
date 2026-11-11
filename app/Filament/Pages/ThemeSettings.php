@@ -312,10 +312,14 @@ class ThemeSettings extends Page
 
     protected function saveSettings(): void
     {
+        $theme = Theme::current();
         $state = $this->form->getState();
-        $state['options'] = self::chosenOptions($state['options'] ?? []);
+        $state['options'] = self::chosenOptions([
+            ...self::otherFooterStylesOptions($theme->options ?? [], $state['footer_style'] ?? null),
+            ...$state['options'] ?? [],
+        ]);
 
-        Theme::current()->update($state);
+        $theme->update($state);
         $this->rememberLoadedSettings();
 
         Notification::make()
@@ -368,6 +372,25 @@ class ThemeSettings extends Page
         }, ARRAY_FILTER_USE_BOTH);
 
         return $chosen ?: null;
+    }
+
+    /**
+     * The saved settings of the footer styles that aren't chosen. Their fields
+     * are hidden, so the form leaves them out; without these they'd be lost
+     * each time the theme is saved.
+     *
+     * @param  array<string, mixed>  $savedOptions
+     * @return array<string, mixed>
+     */
+    private static function otherFooterStylesOptions(array $savedOptions, FooterStyle|string|null $chosenStyle): array
+    {
+        $chosenStyle = $chosenStyle instanceof FooterStyle ? $chosenStyle->value : $chosenStyle;
+
+        return array_filter($savedOptions, function (string $key) use ($chosenStyle): bool {
+            $style = ThemeOptions::all()[$key]['footer_style'] ?? null;
+
+            return $style !== null && $style !== $chosenStyle;
+        }, ARRAY_FILTER_USE_KEY);
     }
 
     private static function optionsSection(string $tab, string $section): Section
