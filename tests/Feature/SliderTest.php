@@ -20,6 +20,12 @@ class SliderTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_the_factory_makes_exactly_the_slides_asked_for(): void
+    {
+        $this->assertCount(0, Slider::factory()->withSlides(0)->create()->slides);
+        $this->assertCount(2, Slider::factory()->withSlides(2)->create()->slides);
+    }
+
     public function test_a_slider_is_shown_where_its_shortcode_is_written(): void
     {
         $slider = Slider::factory()->withSlides(2)->create(['name' => 'Highlights', 'slug' => 'highlights', 'seconds_per_slide' => 5]);

@@ -35,7 +35,7 @@ class SliderFactory extends Factory
     public function withSlides(int $count = 3): static
     {
         return $this->afterCreating(function (Slider $slider) use ($count): void {
-            foreach (range(1, $count) as $number) {
+            for ($number = 1; $number <= $count; $number++) {
                 $slider->slides()->create([
                     'image_id' => Image::factory()->create()->id,
                     'caption' => "Caption {$number}",
