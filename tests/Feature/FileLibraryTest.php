@@ -54,6 +54,17 @@ class FileLibraryTest extends TestCase
         return new UploadedFile($path, $name, null, null, true);
     }
 
+    public function test_only_the_librarys_own_addresses_count_as_library_files(): void
+    {
+        foreach (['menu.pdf', 'files/menu.pdf', '/uploads/files/menu.pdf', '/uploads/files/menu.pdf?v=5'] as $reference) {
+            $this->assertSame('menu.pdf', LibraryFile::nameFromReference($reference), $reference);
+        }
+
+        foreach (['/downloads/files/menu.pdf', 'docs/files/menu.pdf'] as $reference) {
+            $this->assertNull(LibraryFile::nameFromReference($reference), $reference);
+        }
+    }
+
     public function test_an_upload_keeps_a_tidied_version_of_its_name_and_its_size(): void
     {
         $file = LibraryFile::storeUpload(self::pdf());

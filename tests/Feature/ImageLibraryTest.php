@@ -27,6 +27,17 @@ class ImageLibraryTest extends TestCase
         Storage::fake(Image::DISK, ['url' => '/uploads']);
     }
 
+    public function test_only_the_librarys_own_addresses_count_as_library_images(): void
+    {
+        foreach (['team.jpg', 'images/team.jpg', '/uploads/images/team.jpg', '/storage/images/team.jpg', '/uploads/images/team.jpg?v=5'] as $reference) {
+            $this->assertSame('team.jpg', Image::nameFromReference($reference), $reference);
+        }
+
+        foreach (['/assets/images/team.jpg', 'theme/images/team.jpg', '/uploads/files/images/team.jpg'] as $reference) {
+            $this->assertNull(Image::nameFromReference($reference), $reference);
+        }
+    }
+
     public function test_an_upload_keeps_a_tidied_version_of_its_name(): void
     {
         $image = Image::storeUpload(UploadedFile::fake()->image('Team Photo.JPG', 800, 600));

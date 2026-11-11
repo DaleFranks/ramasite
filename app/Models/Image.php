@@ -284,13 +284,13 @@ class Image extends Model
     /**
      * The library file name that a reference in content points to: "team.jpg",
      * "images/team.jpg", "/uploads/images/team.jpg" and the older
-     * "/storage/images/team.jpg" all mean "team.jpg".
+     * "/storage/images/team.jpg" all mean "team.jpg". Anything else, such as
+     * "/assets/images/team.jpg", isn't in the library and is left as written.
      */
     public static function nameFromReference(string $reference): ?string
     {
         $name = strtolower(urldecode(ltrim(parse_url($reference, PHP_URL_PATH) ?: $reference, '/')));
-        $name = preg_replace('#^(storage|uploads)/#', '', $name);
-        $name = Str::after($name, self::DIRECTORY.'/');
+        $name = preg_replace('#^((storage|uploads)/)?'.self::DIRECTORY.'/#', '', $name);
 
         return preg_match('/^[a-z0-9][a-z0-9._-]*\.[a-z0-9]+$/', $name) ? $name : null;
     }

@@ -273,12 +273,12 @@ class LibraryFile extends Model
     /**
      * The library file name a reference in content points to: "menu.pdf",
      * "files/menu.pdf" and "/uploads/files/menu.pdf" all mean "menu.pdf".
+     * Anything else, such as "/downloads/files/menu.pdf", isn't in the library.
      */
     public static function nameFromReference(string $reference): ?string
     {
         $name = strtolower(urldecode(ltrim(parse_url($reference, PHP_URL_PATH) ?: $reference, '/')));
-        $name = preg_replace('#^uploads/#', '', $name);
-        $name = Str::after($name, self::DIRECTORY.'/');
+        $name = preg_replace('#^(uploads/)?'.self::DIRECTORY.'/#', '', $name);
 
         return preg_match('/^[a-z0-9][a-z0-9._-]*\.[a-z0-9]+$/', $name) ? $name : null;
     }
