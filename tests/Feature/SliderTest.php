@@ -57,7 +57,8 @@ class SliderTest extends TestCase
         $slider->slides()->create(['image_id' => Image::factory()->create(['filename' => 'second.jpg'])->id, 'sort' => 2]);
         $slider->slides()->create(['image_id' => Image::factory()->create(['filename' => 'first.jpg'])->id, 'sort' => 1]);
 
-        $this->assertLessThan(strpos($slider->html(), 'second.jpg'), strpos($slider->html(), 'first.jpg'));
+        // Both must be there, first one first: a missing image can't pass as being in order
+        $this->assertMatchesRegularExpression('/first\.jpg.*second\.jpg/s', $slider->html());
     }
 
     public function test_the_fade_animation_and_no_timer_are_marked_on_the_slider(): void
