@@ -118,8 +118,7 @@ class Redirect extends Model
         $target = $this->to;
 
         if ($this->isWildcard() && str_ends_with($target, '*')) {
-            $rest = Str::after(self::normalizePath($path), rtrim($this->from_path, '*'));
-            $target = substr($target, 0, -1).$rest;
+            $target = substr($target, 0, -1).self::restOfPath($path, rtrim($this->from_path, '*'));
         }
 
         if (! preg_match('#^https?://#i', $target)) {
@@ -131,6 +130,23 @@ class Redirect extends Model
         }
 
         return $target;
+    }
+
+    /**
+     * The part of a visitor's address after a wildcard's beginning, with the
+     * case they typed. Characters an address can't hold, such as spaces, are
+     * encoded again, so "Price%20List.PDF" arrives as it was sent.
+     */
+    private static function restOfPath(string $path, string $beginning): string
+    {
+        $decoded = trim(rawurldecode(Str::before(Str::before($path, '?'), '#')), '/');
+        $rest = mb_substr($decoded, mb_strlen($beginning));
+
+        return (string) preg_replace_callback(
+            "#[^A-Za-z0-9\\-._~!$&'()*+,;=:@/]#u",
+            fn (array $character): string => rawurlencode($character[0]),
+            $rest,
+        );
     }
 
     /**

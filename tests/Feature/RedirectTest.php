@@ -72,6 +72,13 @@ class RedirectTest extends TestCase
         $this->assertSame('old-page', Redirect::normalizePath('https://example.com/Old-Page/'));
     }
 
+    public function test_a_wildcard_carries_the_rest_of_the_address_across_as_it_was_typed(): void
+    {
+        Redirect::factory()->create(['from_path' => 'docs/*', 'to' => 'https://old.example.com/docs/*']);
+
+        $this->get('/Docs/Price%20List.PDF')->assertRedirect('https://old.example.com/docs/Price%20List.PDF');
+    }
+
     public function test_a_published_page_always_wins_over_a_redirect(): void
     {
         Entry::factory()->published()->create(['slug' => 'services', 'title' => 'Our services']);
