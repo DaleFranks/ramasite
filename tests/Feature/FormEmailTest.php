@@ -8,7 +8,6 @@ use App\Models\Entry;
 use App\Models\Form;
 use App\Models\FormSubmission;
 use App\Models\User;
-use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
@@ -102,7 +101,7 @@ class FormEmailTest extends TestCase
     public function test_addresses_on_the_form_must_be_valid(): void
     {
         $this->actingAs(User::factory()->create());
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
 
         Livewire::test(CreateForm::class)
             ->fillForm([
@@ -113,6 +112,5 @@ class FormEmailTest extends TestCase
             ->call('create')
             ->assertHasFormErrors(['notify_emails.1']);
 
-        $undoRepeaterFake();
     }
 }

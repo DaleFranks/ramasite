@@ -12,7 +12,6 @@ use App\SlideCaptionPosition;
 use App\SliderAnimation;
 use App\SliderArrowStyle;
 use App\SlideZoom;
-use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -44,7 +43,7 @@ class SliderResourceTest extends TestCase
 
     public function test_a_slider_is_created_with_slides_picked_from_the_library(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $first = Image::factory()->create();
         $second = Image::factory()->create();
 
@@ -62,8 +61,6 @@ class SliderResourceTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $undoRepeaterFake();
-
         $slider = Slider::query()->where('slug', 'home-page-highlights')->sole();
         $this->assertSame(SliderAnimation::Fade, $slider->animation);
         $this->assertSame(6, $slider->seconds_per_slide);
@@ -73,7 +70,7 @@ class SliderResourceTest extends TestCase
 
     public function test_a_slide_saves_its_text_position_and_colors(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $slider = Slider::factory()->create();
 
         Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
@@ -87,8 +84,6 @@ class SliderResourceTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $undoRepeaterFake();
-
         $slide = $slider->slides()->sole();
         $this->assertSame("Line one\nLine two", $slide->caption);
         $this->assertSame(SlideCaptionPosition::Left, $slide->caption_position);
@@ -98,7 +93,7 @@ class SliderResourceTest extends TestCase
 
     public function test_a_slide_saves_its_slow_zoom_and_is_off_unless_chosen(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $slider = Slider::factory()->create();
 
         Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
@@ -109,14 +104,12 @@ class SliderResourceTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $undoRepeaterFake();
-
         $this->assertSame([SlideZoom::Out, SlideZoom::Off], $slider->slides()->get()->pluck('zoom')->all());
     }
 
     public function test_a_slide_rejects_colors_that_are_not_colors(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $slider = Slider::factory()->create();
 
         Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
@@ -128,7 +121,6 @@ class SliderResourceTest extends TestCase
             ->call('save')
             ->assertHasFormErrors(['slides.0.caption_text_color', 'slides.0.caption_background_color']);
 
-        $undoRepeaterFake();
     }
 
     public function test_the_arrow_backing_color_is_only_offered_for_styles_with_a_backing(): void
@@ -143,7 +135,7 @@ class SliderResourceTest extends TestCase
 
     public function test_a_slider_saves_its_arrow_settings(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $slider = Slider::factory()->withSlides(1)->create();
 
         Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
@@ -155,8 +147,6 @@ class SliderResourceTest extends TestCase
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $undoRepeaterFake();
-
         $slider->refresh();
         $this->assertSame(SliderArrowStyle::Circle, $slider->arrow_style);
         $this->assertSame('#112233', $slider->arrow_color);
@@ -165,7 +155,7 @@ class SliderResourceTest extends TestCase
 
     public function test_a_slider_rejects_arrow_colors_that_are_not_plain_colors(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $slider = Slider::factory()->withSlides(1)->create();
 
         Livewire::test(EditSlider::class, ['record' => $slider->getRouteKey()])
@@ -173,7 +163,6 @@ class SliderResourceTest extends TestCase
             ->call('save')
             ->assertHasFormErrors(['arrow_color', 'arrow_background_color']);
 
-        $undoRepeaterFake();
     }
 
     public function test_the_edge_to_edge_help_only_shows_once_it_is_selected(): void
@@ -186,7 +175,7 @@ class SliderResourceTest extends TestCase
 
     public function test_saving_an_edge_to_edge_slider_with_a_narrow_image_saves_and_warns(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $narrow = Image::factory()->create(['filename' => 'narrow.jpg', 'width' => 1000, 'height' => 500]);
         $slider = Slider::factory()->create();
 
@@ -199,14 +188,12 @@ class SliderResourceTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotified('Check this slider\'s images');
 
-        $undoRepeaterFake();
-
         $this->assertTrue($slider->refresh()->edge_to_edge);
     }
 
     public function test_saving_a_slider_with_a_narrow_image_gives_no_warning_unless_edge_to_edge(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $narrow = Image::factory()->create(['width' => 1000, 'height' => 500]);
         $slider = Slider::factory()->create();
 
@@ -216,24 +203,22 @@ class SliderResourceTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotNotified('Check this slider\'s images');
 
-        $undoRepeaterFake();
     }
 
     public function test_a_slider_needs_at_least_one_slide(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
 
         Livewire::test(CreateSlider::class)
             ->fillForm(['name' => 'Empty', 'slides' => []])
             ->call('create')
             ->assertHasFormErrors(['slides']);
 
-        $undoRepeaterFake();
     }
 
     public function test_slides_can_be_reordered(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $slider = Slider::factory()->withSlides(2)->create();
         [$first, $second] = $slider->slides->pluck('image_id')->all();
 
@@ -244,8 +229,6 @@ class SliderResourceTest extends TestCase
             ]])
             ->call('save')
             ->assertHasNoFormErrors();
-
-        $undoRepeaterFake();
 
         $this->assertSame([$second, $first], $slider->refresh()->slides->pluck('image_id')->all());
     }

@@ -8,7 +8,6 @@ use App\Filament\Resources\Forms\Pages\ListForms;
 use App\FormFieldType;
 use App\Models\Form;
 use App\Models\User;
-use Filament\Forms\Components\Repeater;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -40,7 +39,7 @@ class FormResourceTest extends TestCase
 
     public function test_a_form_is_built_with_its_fields_in_order(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
 
         Livewire::test(CreateForm::class)
             ->fillForm([
@@ -56,8 +55,6 @@ class FormResourceTest extends TestCase
             ->call('create')
             ->assertHasNoFormErrors();
 
-        $undoRepeaterFake();
-
         $form = Form::query()->where('slug', 'book-a-room')->sole();
         $this->assertSame('Book', $form->submit_label);
         $this->assertSame(['your_name', 'room'], $form->formFields()->pluck('key')->all());
@@ -67,7 +64,7 @@ class FormResourceTest extends TestCase
 
     public function test_choice_fields_need_choices(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
 
         Livewire::test(CreateForm::class)
             ->fillForm([
@@ -77,7 +74,6 @@ class FormResourceTest extends TestCase
             ->call('create')
             ->assertHasFormErrors(['fields.0.choices' => 'required']);
 
-        $undoRepeaterFake();
     }
 
     public function test_a_form_needs_at_least_one_field(): void
@@ -90,15 +86,13 @@ class FormResourceTest extends TestCase
 
     public function test_editing_a_field_keeps_its_key(): void
     {
-        $undoRepeaterFake = Repeater::fake();
+        $this->fakeRepeaters();
         $form = Form::factory()->create(['fields' => [['label' => 'Name', 'type' => 'text']]]);
 
         Livewire::test(EditForm::class, ['record' => $form->getRouteKey()])
             ->fillForm(['fields' => [['key' => 'name', 'label' => 'Full name', 'type' => FormFieldType::Text]]])
             ->call('save')
             ->assertHasNoFormErrors();
-
-        $undoRepeaterFake();
 
         $this->assertSame([['key' => 'name', 'label' => 'Full name', 'type' => 'text']], array_map(
             fn (array $field): array => array_intersect_key($field, array_flip(['key', 'label', 'type'])),
