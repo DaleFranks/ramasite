@@ -6,6 +6,7 @@ use App\EntryType;
 use App\Models\Entry;
 use App\Models\Redirect;
 use App\Models\Theme;
+use App\SiteAddress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -45,7 +46,7 @@ class FeedController extends Controller
             ->limit(self::LISTED_POSTS)
             ->get();
 
-        $siteAddress = $request->getSchemeAndHttpHost();
+        $siteAddress = SiteAddress::canonicalOrigin();
         $images = collect(Entry::previewImageUrls($posts))
             ->map(fn (string $url): string => str_starts_with($url, '/') ? $siteAddress.$url : $url);
 

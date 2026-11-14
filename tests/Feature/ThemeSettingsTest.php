@@ -118,6 +118,30 @@ class ThemeSettingsTest extends TestCase
         $this->assertStringEndsWith('.jpg', Theme::current()->favicon_path);
     }
 
+    public function test_a_replaced_or_removed_theme_image_is_deleted(): void
+    {
+        $uploads = Storage::fake('uploads');
+        $uploads->put('theme/old-logo.png', 'logo');
+        $uploads->put('theme/icon.png', 'icon');
+        $uploads->put('images/team.jpg', 'not the theme\'s');
+        Theme::current()->update(['logo_path' => 'theme/old-logo.png', 'favicon_path' => 'theme/icon.png']);
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ThemeSettings::class)
+            ->fillForm(['logo_path' => [UploadedFile::fake()->image('new-logo.png', 200, 50)]])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $uploads->assertMissing('theme/old-logo.png');
+        $uploads->assertExists(Theme::current()->logo_path);
+        $uploads->assertExists('theme/icon.png');
+
+        Livewire::test(ThemeSettings::class)->callAction('resetToDefaults');
+
+        $this->assertSame([], $uploads->files('theme'));
+        $uploads->assertExists('images/team.jpg');
+    }
+
     public function test_reset_restores_the_default_look_but_keeps_the_site_name(): void
     {
         $this->actingAs(User::factory()->create());

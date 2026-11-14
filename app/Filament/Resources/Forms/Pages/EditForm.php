@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Forms\Pages;
 
+use App\Filament\InUseCheck;
 use App\Filament\Resources\Forms\FormResource;
 use App\Models\Form;
 use Filament\Actions\Action;
@@ -24,6 +25,7 @@ class EditForm extends EditRecord
                 ->disabled(fn (Form $record): bool => ! $record->submissions()->exists())
                 ->action(fn (Form $record): StreamedResponse => $record->downloadSubmissionsCsv()),
             DeleteAction::make()
+                ->before(InUseCheck::beforeDeleting())
                 ->modalDescription(fn (Form $record): string => match ($count = $record->submissions()->count()) {
                     0 => 'Are you sure you would like to do this?',
                     1 => 'Its 1 submission will be deleted too.',

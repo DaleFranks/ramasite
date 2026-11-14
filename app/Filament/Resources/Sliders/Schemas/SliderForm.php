@@ -10,6 +10,7 @@ use App\SlideCaptionPosition;
 use App\SliderAnimation;
 use App\SliderArrowStyle;
 use App\SlideZoom;
+use Closure;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
@@ -59,6 +60,7 @@ class SliderForm
                                 'regex' => 'Use lowercase letters, numbers and hyphens only.',
                             ])
                             ->unique(ignoreRecord: true)
+                            ->rule(fn (?Slider $record): Closure => Slider::slugUnchangedWhileInUse($record))
                             ->helperText(fn (Get $get): string => 'Place the slider in a page by writing [slider:'.($get('slug') ?: 'slug').'] in its content.'),
                         ToggleButtons::make('animation')
                             ->options(SliderAnimation::class)
@@ -130,7 +132,7 @@ class SliderForm
                                             ->helperText('It\'s added to the image library.'),
                                     ])
                                     ->createOptionUsing(fn (array $data): int => Image::storeUpload($data['file'])->id)
-                                    ->helperText('The image\'s alt text in the library is used.'),
+                                    ->helperText('The image\'s alt text in the library is used. '.self::imageSearchHelp()),
                                 Textarea::make('caption')
                                     ->rows(2)
                                     ->maxLength(255)
@@ -209,7 +211,8 @@ class SliderForm
     }
 
     /**
-     * A thumbnail beside each image's name.
+     * A thumbnail beside each image's name and alt text, so an image found by
+     * its alt text shows why.
      *
      * @param  Collection<int, Image>  $images
      * @return array<int, string>
@@ -220,8 +223,16 @@ class SliderForm
             ->mapWithKeys(fn (Image $image): array => [
                 $image->id => '<span style="display:flex;align-items:center;gap:0.75rem">'
                     .'<img src="'.e($image->url()).'" alt="" loading="lazy" style="width:4rem;height:2.5rem;object-fit:cover;border-radius:0.25rem">'
-                    .'<span>'.e($image->filename).'</span></span>',
+                    .'<span>'.e($image->filename).'<br><small>'.e($image->alt_text ?: 'No alt text').'</small></span></span>',
             ])
             ->all();
+    }
+
+    /**
+     * Help for an image select: how to reach images beyond the listed ones.
+     */
+    public static function imageSearchHelp(): string
+    {
+        return 'The list shows the '.InsertImageAction::LISTED_IMAGES.' newest images. Type part of a name or alt text to find any image; a search shows up to '.InsertImageAction::LISTED_IMAGES.' matches, so type more to narrow it.';
     }
 }

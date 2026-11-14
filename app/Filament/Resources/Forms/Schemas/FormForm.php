@@ -3,6 +3,8 @@
 namespace App\Filament\Resources\Forms\Schemas;
 
 use App\FormFieldType;
+use App\Models\Form;
+use Closure;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -48,6 +50,7 @@ class FormForm
                                 'regex' => 'Use lowercase letters, numbers and hyphens only.',
                             ])
                             ->unique(ignoreRecord: true)
+                            ->rule(fn (?Form $record): Closure => Form::slugUnchangedWhileInUse($record))
                             ->helperText(fn (Get $get): string => 'Place the form in a page, module or card by writing [form:'.($get('slug') ?: 'slug').'] in its content.'),
                         TextInput::make('submit_label')
                             ->label('Button wording')

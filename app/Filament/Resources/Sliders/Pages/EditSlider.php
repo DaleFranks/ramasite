@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Sliders\Pages;
 
 use App\Filament\Concerns\WarnsAboutEdgeToEdgeImages;
+use App\Filament\InUseCheck;
 use App\Filament\Resources\Sliders\SliderResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -16,7 +17,8 @@ class EditSlider extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->before(InUseCheck::beforeDeleting()),
         ];
     }
 

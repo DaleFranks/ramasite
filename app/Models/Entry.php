@@ -36,6 +36,7 @@ use Illuminate\Support\Str;
     'show_title',
     'status',
     'published_at',
+    'show_publish_date',
     'nav_order',
     'menu_label',
     'posts_per_page',
@@ -88,6 +89,11 @@ class Entry extends Model
             }
 
             $entry->path = $entry->buildPath();
+
+            // Published with no date: it's published now, which is its date from then on
+            if ($entry->status === EntryStatus::Published && $entry->published_at === null) {
+                $entry->published_at = now();
+            }
         });
 
         static::saved(function (Entry $entry): void {
@@ -104,8 +110,9 @@ class Entry extends Model
             }
         });
 
+        // The home page can't go (the site's main address would have nothing), nor can a blog with posts
         static::deleting(function (Entry $entry): bool {
-            return ! $entry->posts()->exists();
+            return ! $entry->isHomePage() && ! $entry->posts()->exists();
         });
     }
 
@@ -133,6 +140,7 @@ class Entry extends Model
             'layout' => EntryLayout::class,
             'show_title' => 'boolean',
             'published_at' => 'datetime',
+            'show_publish_date' => 'boolean',
             'nav_order' => 'integer',
             'posts_per_page' => 'integer',
             'posts_columns' => BlogColumns::class,
@@ -153,6 +161,15 @@ class Entry extends Model
         $blogPath = Entry::query()->whereKey($this->blog_id)->value('path');
 
         return $blogPath.'/'.$slug;
+    }
+
+    /**
+     * Whether this is the home page, shown at the site's main address. Its
+     * slug, type and existence are locked, as the footer module's are.
+     */
+    public function isHomePage(): bool
+    {
+        return $this->exists && $this->getRawOriginal('path') === self::HOME_PATH;
     }
 
     /**
@@ -208,6 +225,24 @@ class Entry extends Model
     public function showsTitle(): bool
     {
         return $this->layout?->showsTitle() !== false || (bool) $this->show_title;
+    }
+
+    /**
+     * Whether the publish date is shown on the page itself (and, for a post,
+     * in its blog's list): as chosen in the editor, or else by its type, as
+     * posts traditionally show one and pages, which rarely change, don't.
+     */
+    public function showsPublishDate(): bool
+    {
+        return $this->show_publish_date ?? self::showsPublishDateByDefault($this->type);
+    }
+
+    /**
+     * Whether a new entry of this type shows its publish date until it's set otherwise.
+     */
+    public static function showsPublishDateByDefault(?EntryType $type): bool
+    {
+        return $type === EntryType::Post;
     }
 
     /**
@@ -323,7 +358,7 @@ class Entry extends Model
         $image = Image::query()->where('filename', Image::nameFromReference($reference))->first();
 
         return $image === null ? null : [
-            'url' => request()->getSchemeAndHttpHost().$image->url(),
+            'url' => SiteAddress::canonicalOrigin().$image->url(),
             'width' => $image->width ?: null,
             'height' => $image->height ?: null,
         ];

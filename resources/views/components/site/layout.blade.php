@@ -17,7 +17,7 @@
 
     // The picture for link previews on social media: the page's own image, or else the logo
     $sharePicture = $shareImage ?? ($theme->logoUrl()
-        ? ['url' => request()->getSchemeAndHttpHost().$theme->logoUrl(), 'width' => null, 'height' => null]
+        ? ['url' => \App\SiteAddress::canonicalOrigin().$theme->logoUrl(), 'width' => null, 'height' => null]
         : null);
 @endphp
 

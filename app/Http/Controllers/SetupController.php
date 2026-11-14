@@ -15,6 +15,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\View\View;
@@ -61,15 +62,20 @@ class SetupController extends Controller
 
         self::createTables();
 
-        $user = User::query()->create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => $validated['password'],
-        ]);
+        // All or nothing: an admin account alone would count as a finished setup
+        $user = DB::transaction(function () use ($validated): User {
+            $user = User::query()->create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => $validated['password'],
+            ]);
 
-        Theme::current()->update(['site_name' => $validated['site_name']]);
-        (new HomePageSeeder)->run();
-        (new StarterFormsSeeder)->run();
+            Theme::current()->update(['site_name' => $validated['site_name']]);
+            (new HomePageSeeder)->run();
+            (new StarterFormsSeeder)->run();
+
+            return $user;
+        });
 
         SiteAddress::save($request->root());
 

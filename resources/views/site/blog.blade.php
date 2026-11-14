@@ -11,6 +11,8 @@
 >
     <h1 @class(['page-title', 'visually-hidden' => ! $entry->showsTitle()])>{{ $entry->title }}</h1>
 
+    <x-site.publish-date :entry="$entry" />
+
     <article class="prose">
         {!! $entry->bodyHtml() !!}
     </article>
@@ -26,7 +28,7 @@
                 <h2 class="feed-title">
                     <a href="{{ $post->url() }}">{{ $post->title }}</a>
                 </h2>
-                @if ($post->published_at)
+                @if ($post->showsPublishDate() && $post->published_at)
                     <div class="feed-date">{{ \App\Models\Theme::localTime($post->published_at)->format('F j, Y') }}</div>
                 @endif
                 <p class="feed-excerpt">{{ $post->excerpt() }}</p>

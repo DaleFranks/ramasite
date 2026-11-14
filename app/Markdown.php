@@ -164,6 +164,23 @@ class Markdown
         }, $html);
     }
 
+    /**
+     * Mark each link that is the only thing in its paragraph (a line of its
+     * own in the Markdown) as a button, for the panels that show such links
+     * as buttons. Links within text are left as they are, and so is a link
+     * written in HTML with its own class.
+     */
+    public static function withButtonLinks(string $html): string
+    {
+        return (string) preg_replace_callback(
+            '#<p>\s*<a\s([^>]*)>((?:(?!</?a[\s>]|</?p>).)*)</a>\s*</p>#s',
+            fn (array $match): string => preg_match('/\bclass\s*=/i', $match[1])
+                ? $match[0]
+                : '<p><a class="button-link" '.$match[1].'>'.$match[2].'</a></p>',
+            $html,
+        );
+    }
+
     private static function inlinePlaceholder(int $index): string
     {
         return "\u{E000}{$index}\u{E001}";
@@ -174,7 +191,7 @@ class Markdown
      *
      * @return list<string>
      */
-    private static function slugs(string $value): array
+    public static function slugs(string $value): array
     {
         return collect(explode(',', $value))
             ->map(fn (string $slug): string => strtolower(preg_replace('/\.md$/i', '', trim($slug))))
@@ -251,7 +268,8 @@ class Markdown
 
     /**
      * The parts of [file:name|link text|details]. After the name, "details"
-     * asks for the file's type and size; anything else is the link's text.
+     * (in lower case) asks for the file's type and size; anything else is
+     * the link's text, so a link can read "Details".
      *
      * @return array{file: string, text: ?string, details: bool}
      */
@@ -261,7 +279,7 @@ class Markdown
         $options = ['file' => (string) array_shift($parts), 'text' => null, 'details' => false];
 
         foreach ($parts as $part) {
-            if (strtolower($part) === 'details') {
+            if ($part === 'details') {
                 $options['details'] = true;
             } elseif ($part !== '') {
                 $options['text'] = $part;
@@ -327,9 +345,9 @@ class Markdown
                 continue;
             }
 
-            if (preg_match('/^\d+(%|x\d+|px)?$/i', $part)) {
+            if (self::isImageSize($part)) {
                 $options['size'] = strtolower($part);
-            } elseif (in_array(strtolower($part), ['left', 'center', 'right'], true)) {
+            } elseif (self::isImageAlignment($part)) {
                 $options['align'] = strtolower($part);
             } else {
                 $options['description'] = $part;
@@ -337,6 +355,22 @@ class Markdown
         }
 
         return $options;
+    }
+
+    /**
+     * Whether a part of [image:...] is a width, such as "400", "50%" or "400x300".
+     */
+    public static function isImageSize(string $part): bool
+    {
+        return (bool) preg_match('/^\d+(%|x\d+|px)?$/i', trim($part));
+    }
+
+    /**
+     * Whether a part of [image:...] is an alignment: left, center or right.
+     */
+    public static function isImageAlignment(string $part): bool
+    {
+        return in_array(strtolower(trim($part)), ['left', 'center', 'right'], true);
     }
 
     /**

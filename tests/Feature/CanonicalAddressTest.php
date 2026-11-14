@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\EntryStatus;
 use App\Models\Entry;
+use App\Models\Image;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -30,6 +31,16 @@ class CanonicalAddressTest extends TestCase
 
         $this->get('https://www.example.com/about')
             ->assertSee('<link rel="canonical" href="https://example.com/about">', false);
+    }
+
+    public function test_a_visit_to_www_shares_its_picture_from_the_main_domain(): void
+    {
+        config(['app.url' => 'https://example.com']);
+        Image::factory()->create(['filename' => 'team.jpg']);
+        Entry::factory()->published()->create(['slug' => 'about', 'body' => '[image:team.jpg]']);
+
+        $this->get('https://www.example.com/about')
+            ->assertSee('<meta property="og:image" content="https://example.com/uploads/images/team.jpg">', false);
     }
 
     public function test_a_site_saved_with_www_names_the_www_address(): void

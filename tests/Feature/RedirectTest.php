@@ -167,6 +167,31 @@ class RedirectTest extends TestCase
             ->assertHasActionErrors(['to']);
     }
 
+    public function test_a_redirect_that_would_loop_through_others_is_refused(): void
+    {
+        $this->actingAs(User::factory()->create());
+        Redirect::factory()->create(['from_path' => 'b', 'to' => '/c']);
+        Redirect::factory()->create(['from_path' => 'c', 'to' => '/a']);
+
+        Livewire::test(ManageRedirects::class)
+            ->callAction('create', data: ['from_path' => 'a', 'to' => '/b', 'status_code' => 301])
+            ->assertHasActionErrors(['to']);
+
+        // When a redirect is edited, its saved version isn't part of the trail
+        $fromX = Redirect::factory()->create(['from_path' => 'x', 'to' => '/y']);
+        Redirect::factory()->create(['from_path' => 'y', 'to' => '/x']);
+
+        Livewire::test(ManageRedirects::class)
+            ->callTableAction('edit', $fromX, data: ['from_path' => 'z', 'to' => '/y', 'status_code' => 301])
+            ->assertHasNoTableActionErrors();
+
+        // A published page ends the trail, as visits there are never redirected
+        Entry::factory()->published()->create(['slug' => 'c']);
+
+        $this->assertFalse(Redirect::wouldLoop('a', '/b'));
+        $this->assertFalse(Redirect::wouldLoop('a', 'https://elsewhere.test/b'));
+    }
+
     public function test_the_screen_lists_redirects_with_their_use(): void
     {
         $this->actingAs(User::factory()->create());

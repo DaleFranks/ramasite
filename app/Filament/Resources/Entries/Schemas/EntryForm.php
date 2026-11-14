@@ -81,9 +81,12 @@ class EntryForm
                                             $fail("A post in this blog would move to /{$clashingPostPath}, which is already used by another entry.");
                                         }
                                     })
-                                    ->helperText(fn (Get $get): string => self::isPost($get)
-                                        ? 'The last part of the post\'s address, e.g. "my-first-post".'
-                                        : 'The address of the page, e.g. "about" or "services/design".'),
+                                    ->disabled(fn (?Entry $record): bool => $record?->isHomePage() ?? false)
+                                    ->helperText(fn (Get $get, ?Entry $record): string => match (true) {
+                                        $record?->isHomePage() ?? false => 'This page is the home page, shown at the site\'s main address, so its slug can\'t change.',
+                                        self::isPost($get) => 'The last part of the post\'s address, e.g. "my-first-post".',
+                                        default => 'The address of the page, e.g. "about" or "services/design".',
+                                    }),
                                 MarkdownEditor::make('body')
                                     ->label('Content')
                                     // Sent when the editor loses focus, so the featured image choices follow the content
@@ -121,14 +124,23 @@ class EntryForm
                             ->schema([
                                 Select::make('type')
                                     ->options(EntryType::class)
-                                    ->default(fn (): EntryType => EntryType::tryFrom((string) request()->query('type')) ?? EntryType::Page)
+                                    ->default(fn (): EntryType => self::typeFromAddress())
                                     ->required()
                                     ->live()
-                                    ->afterStateUpdated(fn (string $operation, Get $get, Set $set, ?Entry $record) => self::fillSlug($operation, $get, $set, $record))
-                                    ->disabled(fn (?Entry $record): bool => $record?->type === EntryType::Blog && $record->posts()->exists())
-                                    ->helperText(fn (?Entry $record): ?string => $record?->type === EntryType::Blog && $record->posts()->exists()
-                                        ? 'A blog with posts can\'t change type.'
-                                        : null),
+                                    ->afterStateUpdated(function (string $operation, Get $get, Set $set, ?Entry $record): void {
+                                        self::fillSlug($operation, $get, $set, $record);
+
+                                        // On a new entry, the switch follows the type: on for posts, off for pages and blogs
+                                        if ($operation === 'create') {
+                                            $set('show_publish_date', Entry::showsPublishDateByDefault(self::type($get)));
+                                        }
+                                    })
+                                    ->disabled(fn (?Entry $record): bool => ($record?->isHomePage() ?? false) || ($record?->type === EntryType::Blog && $record->posts()->exists()))
+                                    ->helperText(fn (?Entry $record): ?string => match (true) {
+                                        $record?->isHomePage() ?? false => 'The home page can\'t change type.',
+                                        $record?->type === EntryType::Blog && $record->posts()->exists() => 'A blog with posts can\'t change type.',
+                                        default => null,
+                                    }),
                                 Select::make('blog_id')
                                     ->label('Blog')
                                     ->relationship(
@@ -144,11 +156,19 @@ class EntryForm
                                 Select::make('status')
                                     ->options(EntryStatus::class)
                                     ->default(EntryStatus::Draft)
-                                    ->required(),
+                                    ->required()
+                                    ->helperText(fn (?Entry $record): ?string => ($record?->isHomePage() ?? false)
+                                        ? 'While the home page is a draft, visitors to the site\'s main address see "Page not found".'
+                                        : null),
                                 DateTimePicker::make('published_at')
                                     ->label('Publish date')
-                                    ->helperText('Leave empty to publish immediately.')
+                                    ->helperText('Filled in when it\'s published. Set a future date to schedule it.')
                                     ->timezone(fn (): string => Theme::siteTimezone()),
+                                Toggle::make('show_publish_date')
+                                    ->label('Show the publish date')
+                                    ->default(fn (): bool => Entry::showsPublishDateByDefault(self::typeFromAddress()))
+                                    ->formatStateUsing(fn (?bool $state, ?Entry $record): bool => $state ?? Entry::showsPublishDateByDefault($record?->type))
+                                    ->helperText('Under the title, on the site. A post shows it in its blog\'s list too. Posts show it unless switched off; pages don\'t unless switched on.'),
                             ]),
                         Section::make('Layout')
                             ->schema([
@@ -291,6 +311,21 @@ class EntryForm
             ->whereIn('path', $newPostPaths)
             ->where(fn (Builder $query) => $query->whereNull('blog_id')->orWhere('blog_id', '!=', $record->getKey()))
             ->value('path');
+    }
+
+    /**
+     * The type asked for in the address, as the Quick actions' "New post" does, or else a page.
+     */
+    private static function typeFromAddress(): EntryType
+    {
+        return EntryType::tryFrom((string) request()->query('type')) ?? EntryType::Page;
+    }
+
+    private static function type(Get $get): ?EntryType
+    {
+        $type = $get('type');
+
+        return $type instanceof EntryType ? $type : EntryType::tryFrom((string) $type);
     }
 
     private static function isPost(Get $get): bool

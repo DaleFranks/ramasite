@@ -67,7 +67,7 @@ You can also type shortcodes yourself:
 [file:menu.pdf|Our menu|details]
 ```
 
-Links to a file from the [file library](files.md). After the file name, in any order: the link's **text**, and `details` to show the file's type and size after it. The size is looked up each time the page is shown, so it stays right when the file is replaced. Works in pages, posts, cards and modules.
+Links to a file from the [file library](files.md). After the file name, in any order: the link's **text**, and `details` (in lower case) to show the file's type and size after it. The size is looked up each time the page is shown, so it stays right when the file is replaced. Works in pages, posts, cards and modules.
 
 ### YouTube videos
 

@@ -61,7 +61,7 @@ class InsertFileAction
                     ->searchable()
                     ->options(fn (): array => self::optionsFor(LibraryFile::query()->latest()))
                     ->getSearchResultsUsing(fn (string $search): array => self::optionsFor(
-                        LibraryFile::query()->where('filename', 'like', '%'.$search.'%')->orderBy('filename'),
+                        LibraryFile::query()->whereRaw("filename like ? escape '\\'", [InsertImageAction::likePattern($search)])->orderBy('filename'),
                     ))
                     ->getOptionLabelUsing(fn (string $value): ?string => ($file = LibraryFile::query()->find($value)) ? self::optionLabel($file) : null)
                     ->required()
@@ -102,7 +102,7 @@ class InsertFileAction
         $text = trim(str_replace(['|', ']'], ' ', (string) $text));
 
         // A text of "details" would be read as asking for the details
-        if (strtolower($text) === 'details') {
+        if ($text === 'details') {
             $text = 'Details';
         }
 

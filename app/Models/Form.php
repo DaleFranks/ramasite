@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\FormFieldType;
+use App\Models\Concerns\PlacedByShortcode;
 use Database\Factories\FormFactory;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -35,6 +36,8 @@ class Form extends Model
 {
     /** @use HasFactory<FormFactory> */
     use HasFactory;
+
+    use PlacedByShortcode;
 
     /**
      * The hidden field that only spam bots fill in.
@@ -72,6 +75,22 @@ class Form extends Model
         static::saving(function (Form $form): void {
             $form->fields = self::withKeys($form->fields ?? []);
         });
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected static function placingShortcodes(): array
+    {
+        return ['form'];
+    }
+
+    /**
+     * A form can be placed in modules and cards as well as pages and posts.
+     */
+    protected static function isPlacedInModulesAndCards(): bool
+    {
+        return true;
     }
 
     /**

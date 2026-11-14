@@ -6,6 +6,7 @@ use App\BandEdge;
 use App\BoxStyle;
 use App\Filament\Resources\Sliders\Schemas\SliderForm;
 use App\Models\Module;
+use Closure;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
@@ -48,6 +49,7 @@ class ModuleForm
                                 'regex' => 'Use lowercase letters, numbers and hyphens only.',
                             ])
                             ->unique(ignoreRecord: true)
+                            ->rule(fn (?Module $record): Closure => Module::slugUnchangedWhileInUse($record))
                             ->disabled(fn (?Module $record): bool => $record?->isFooter() ?? false)
                             ->helperText(fn (Get $get, ?Module $record): string => $record?->isFooter()
                                 ? 'This module is the site footer, shown at the bottom of every page.'
@@ -65,7 +67,7 @@ class ModuleForm
                             ->allowHtml()
                             ->searchable()
                             ->placeholder('None')
-                            ->helperText('Fills the module behind its text, cropped to fit. The text color comes from the style.')
+                            ->helperText('Fills the module behind its text, cropped to fit. The text color comes from the style. '.SliderForm::imageSearchHelp())
                             ->hidden(fn (?Module $record): bool => $record?->isFooter() ?? false),
                         Grid::make(2)
                             ->hidden(fn (?Module $record): bool => $record?->isFooter() ?? false)

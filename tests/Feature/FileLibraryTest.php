@@ -134,6 +134,28 @@ class FileLibraryTest extends TestCase
         $this->assertSame(0, LibraryFile::query()->count());
     }
 
+    public function test_a_file_that_cannot_be_saved_is_not_added_to_the_library(): void
+    {
+        $path = tempnam(sys_get_temp_dir(), 'upload');
+        file_put_contents($path, "%PDF-1.4\n%\xe2\xe3\n1 0 obj<<>>endobj\n");
+        $upload = new class($path, 'menu.pdf', null, null, true) extends UploadedFile
+        {
+            public function storeAs($path, $name = null, $options = []): string|false
+            {
+                return false;
+            }
+        };
+
+        try {
+            LibraryFile::storeUpload($upload);
+            $this->fail('The upload was added without its file.');
+        } catch (RuntimeException $exception) {
+            $this->assertSame(LibraryFile::NOT_SAVED_MESSAGE, $exception->getMessage());
+        }
+
+        $this->assertSame(0, LibraryFile::query()->count());
+    }
+
     public function test_the_type_message_lists_what_can_be_uploaded(): void
     {
         $this->assertSame(
@@ -223,6 +245,16 @@ class FileLibraryTest extends TestCase
         $file->update(['size' => 1_258_291]);
 
         $this->assertStringContainsString('(PDF, 1.2 MB)', Markdown::toHtml('[file:menu.pdf|Our menu|details]'));
+    }
+
+    public function test_a_link_can_read_details_with_a_capital_letter(): void
+    {
+        LibraryFile::factory()->create(['filename' => 'menu.pdf', 'size' => 245_760]);
+
+        $this->assertSame(
+            '<p><a href="/uploads/files/menu.pdf">Details</a></p>',
+            trim(Markdown::toHtml('[file:menu.pdf|Details]')),
+        );
     }
 
     public function test_without_text_the_link_shows_the_files_name(): void

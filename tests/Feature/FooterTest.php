@@ -79,6 +79,17 @@ class FooterTest extends TestCase
         $this->assertStringContainsString('&lt;script&gt;Acme', $html);
     }
 
+    public function test_the_current_year_is_the_sites_own(): void
+    {
+        Theme::factory()->create(['timezone' => 'America/Los_Angeles']);
+        $footer = Module::factory()->footer()->create(['body' => '© [curr-year]']);
+
+        // New Year's Day in UTC, still New Year's Eve in California
+        $this->travelTo('2027-01-01 03:00:00');
+
+        $this->assertStringContainsString('© 2026', $footer->bodyHtml());
+    }
+
     public function test_the_footer_cannot_be_deleted(): void
     {
         $footer = Module::factory()->footer()->create();

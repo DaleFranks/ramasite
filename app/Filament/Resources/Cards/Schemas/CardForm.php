@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\Cards\Schemas;
 
 use App\BoxStyle;
+use App\Models\Card;
 use App\TextAlignment;
+use Closure;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
@@ -46,6 +48,7 @@ class CardForm
                                 'regex' => 'Use lowercase letters, numbers and hyphens only.',
                             ])
                             ->unique(ignoreRecord: true)
+                            ->rule(fn (?Card $record): Closure => Card::slugUnchangedWhileInUse($record))
                             ->helperText(fn (Get $get): string => 'Place the card in a page by writing [card:'.($get('slug') ?: 'slug').'] in its content, or show several side by side with [cards: first-slug, second-slug].'),
                         Select::make('style')
                             ->options(BoxStyle::class)

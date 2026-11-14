@@ -506,7 +506,7 @@ body.top-bar-scrolls-away .site-header.scrolled {
 }
 
 .nav-submenu li.active > a {
-    background-color: rgba(37, 99, 235, 0.05);
+    background-color: rgba(var(--color-primary-rgb), 0.05);
     color: var(--color-primary);
     font-weight: 600;
 }
@@ -588,7 +588,9 @@ body.nav-collapsed .header-nav {
     top: 100%;
     left: 0;
     right: 0;
-    height: calc(100vh - var(--header-height) - var(--top-bar-height, 0px));
+    /* The visible height on phones (dvh leaves out the browser's toolbars), under the header as it is now */
+    height: calc(100vh - var(--curr-header-height) - var(--curr-top-bar-height));
+    height: calc(100dvh - var(--curr-header-height) - var(--curr-top-bar-height));
     background-color: var(--mobile-nav-bg-color, var(--color-bg-card));
     padding: 40px 24px;
     opacity: 0;
@@ -598,10 +600,6 @@ body.nav-collapsed .header-nav {
     z-index: 999;
     display: block;
     overflow-y: auto;
-}
-
-body.nav-collapsed .site-header.scrolled + .site-main {
-    padding-top: calc(70px + var(--top-bar-height, 0px) + 40px);
 }
 
 body.nav-collapsed .header-nav.open {
@@ -961,7 +959,7 @@ textarea:focus,
 select:focus {
     outline: none;
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    box-shadow: 0 0 0 3px rgba(var(--color-primary-rgb), 0.15);
 }
 
 .form-group {
@@ -1178,11 +1176,13 @@ select:focus {
     font-size: 1.0625rem;
 }
 
-.module.theme-dark a,
+/* A link on a line of its own is a button (the server marks it .button-link);
+   links within text stay ordinary links, in the panel's own text color */
+.module.theme-dark a.button-link,
 .module.theme-dark .btn,
-.card.theme-dark a,
+.card.theme-dark a.button-link,
 .card.theme-dark .btn,
-.cta-module a,
+.cta-module a.button-link,
 .cta-module .btn {
     display: inline-flex;
     align-items: center;
@@ -1195,17 +1195,29 @@ select:focus {
     background-color: var(--color-primary);
     color: #ffffff !important;
     border: none !important;
-    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+    box-shadow: 0 4px 12px rgba(var(--color-primary-rgb), 0.3);
     transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
-.module.theme-dark a:hover,
+.module.theme-dark a.button-link:hover,
 .module.theme-dark .btn:hover,
-.card.theme-dark a:hover,
+.card.theme-dark a.button-link:hover,
 .card.theme-dark .btn:hover,
-.cta-module a:hover,
+.cta-module a.button-link:hover,
 .cta-module .btn:hover {
     background-color: var(--color-primary-hover);
+}
+
+:is(.module.theme-dark, .card.theme-dark, .cta-module, .module.theme-primary, .card.theme-primary) a:not(.button-link, .btn) {
+    color: inherit;
+    font-weight: 600;
+    border-bottom: 1px dashed color-mix(in srgb, currentColor 60%, transparent);
+}
+
+:is(.module.theme-dark, .card.theme-dark, .cta-module, .module.theme-primary, .card.theme-primary) a:not(.button-link, .btn):hover {
+    color: inherit;
+    border-bottom-style: solid;
+    border-bottom-color: currentColor;
 }
 
 /* Theme: Light (formerly Newsletter card style) */
@@ -1291,9 +1303,9 @@ select:focus {
     font-size: 1.0625rem;
 }
 
-.module.theme-primary a,
+.module.theme-primary a.button-link,
 .module.theme-primary .btn,
-.card.theme-primary a,
+.card.theme-primary a.button-link,
 .card.theme-primary .btn {
     display: inline-flex;
     align-items: center;
@@ -1310,9 +1322,9 @@ select:focus {
     transition: background-color var(--transition-fast), transform var(--transition-fast);
 }
 
-.module.theme-primary a:hover,
+.module.theme-primary a.button-link:hover,
 .module.theme-primary .btn:hover,
-.card.theme-primary a:hover,
+.card.theme-primary a.button-link:hover,
 .card.theme-primary .btn:hover {
     background-color: rgba(255, 255, 255, 0.9);
     transform: translateY(-2px);
@@ -1445,18 +1457,33 @@ select:focus {
 }
 
 .card :is(h5, h6),
-.module.theme-dark :is(h5, h6),
-.module.theme-light :is(h5, h6),
-.module.theme-primary :is(h5, h6),
-.cta-module :is(h5, h6) {
+.module.theme-light :is(h5, h6) {
     color: var(--color-secondary);
+}
+
+/* On the Dark and Primary panels, bold text and the smallest headings take the
+   panel's own colors rather than the page's, which would vanish into the background */
+:is(.module.theme-dark, .card.theme-dark, .cta-module) :is(h5, h6) {
+    color: var(--theme-dark-title, #ffffff);
+}
+
+:is(.module.theme-primary, .card.theme-primary) :is(h5, h6) {
+    color: var(--theme-primary-title, #ffffff);
+}
+
+:is(.module.theme-dark, .card.theme-dark, .cta-module) strong {
+    color: var(--theme-dark-text, #ffffff);
+}
+
+:is(.module.theme-primary, .card.theme-primary) strong {
+    color: var(--theme-primary-text, #ffffff);
 }
 
 /* Theme modifier states (like success message container) */
 .module.theme-light.module-success,
 .newsletter-module.newsletter-success {
-    border-color: rgba(37, 99, 235, 0.4);
-    background-color: rgba(37, 99, 235, 0.02);
+    border-color: rgba(var(--color-primary-rgb), 0.4);
+    background-color: rgba(var(--color-primary-rgb), 0.02);
 }
 
 .module.theme-light.module-success h3,
@@ -1708,7 +1735,7 @@ select:focus {
 }
 
 .feed-excerpt {
-    color: var(--color-text);
+    color: var(--color-text-main);
     font-size: 1rem;
     line-height: 1.6;
     margin-bottom: 16px;
@@ -2421,8 +2448,7 @@ body.layout-full-width .content-container {
 }
 
 /* Landing: no title, modules run edge to edge as bands, everything else stays in the content column. */
-body.layout-landing .site-main,
-body.layout-landing .site-header.scrolled + .site-main {
+body.layout-landing .site-main {
     padding-top: calc(var(--header-height) + var(--top-bar-height, 0px));
     padding-bottom: 0;
 }

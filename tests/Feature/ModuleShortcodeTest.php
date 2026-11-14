@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\BandEdge;
 use App\BoxStyle;
+use App\Models\Card;
 use App\Models\Entry;
 use App\Models\Image;
 use App\Models\Module;
@@ -68,6 +69,24 @@ class ModuleShortcodeTest extends TestCase
         $image->delete();
 
         $this->assertModelExists($image);
+    }
+
+    public function test_on_dark_and_primary_panels_only_a_link_on_its_own_line_is_a_button(): void
+    {
+        $body = "Read [our story](/about) first.\n\n[Contact us](/contact)";
+
+        foreach ([BoxStyle::Dark, BoxStyle::Primary] as $style) {
+            $module = Module::factory()->create(['style' => $style, 'body' => $body]);
+            $card = Card::factory()->create(['style' => $style, 'body' => $body]);
+
+            foreach ([$module->html(), $card->html()] as $html) {
+                $this->assertStringContainsString('Read <a href="/about">our story</a> first.', $html);
+                $this->assertStringContainsString('<p><a class="button-link" href="/contact">Contact us</a></p>', $html);
+            }
+        }
+
+        $light = Module::factory()->create(['style' => BoxStyle::Light, 'body' => $body]);
+        $this->assertStringNotContainsString('button-link', $light->html());
     }
 
     public function test_a_module_without_a_style_has_no_theme_class(): void

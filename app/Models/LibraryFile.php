@@ -71,6 +71,11 @@ class LibraryFile extends Model
 
     private const OLD_OFFICE_MIME_TYPES = ['application/CDFV2', 'application/x-ole-storage', 'application/octet-stream'];
 
+    /**
+     * What the person uploading is told when the file can't be written to the disk.
+     */
+    public const NOT_SAVED_MESSAGE = 'The file couldn\'t be saved, so it hasn\'t been added. The server may be out of disk space.';
+
     protected static function booted(): void
     {
         static::deleting(function (LibraryFile $file): bool {
@@ -137,6 +142,10 @@ class LibraryFile extends Model
 
         $filename = self::uniqueFilename(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), strtolower($file->getClientOriginalExtension()));
         $path = $file->storeAs(self::DIRECTORY, $filename, self::DISK);
+
+        if ($path === false) {
+            throw new RuntimeException(self::NOT_SAVED_MESSAGE);
+        }
 
         return self::query()->create([
             'filename' => $filename,

@@ -431,6 +431,46 @@ class EntryResourceTest extends TestCase
         $this->assertTrue($services->refresh()->parent->is($other));
     }
 
+    public function test_the_home_page_keeps_its_slug_and_type_and_cannot_be_deleted(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $home = Entry::factory()->published()->create(['slug' => 'home', 'title' => 'Welcome']);
+        $about = Entry::factory()->create(['slug' => 'about']);
+
+        Livewire::test(EditEntry::class, ['record' => $home->getRouteKey()])
+            ->assertFormFieldDisabled('slug')
+            ->assertFormFieldDisabled('type')
+            ->assertActionHidden('delete')
+            ->assertSee('While the home page is a draft')
+            ->fillForm(['title' => 'Hello', 'status' => EntryStatus::Draft])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $home->refresh();
+        $this->assertSame(['Hello', Entry::HOME_PATH, EntryStatus::Draft], [$home->title, $home->path, $home->status]);
+
+        Livewire::test(ListEntries::class)
+            ->assertTableBulkActionVisible('delete')
+            ->callTableBulkAction('delete', [$home, $about]);
+
+        $this->assertModelExists($home);
+        $this->assertModelMissing($about);
+
+        $home->delete();
+        $this->assertModelExists($home);
+    }
+
+    public function test_other_pages_keep_their_slug_box_and_delete_button(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $about = Entry::factory()->create(['slug' => 'about']);
+
+        Livewire::test(EditEntry::class, ['record' => $about->getRouteKey()])
+            ->assertFormFieldEnabled('slug')
+            ->assertActionVisible('delete')
+            ->assertDontSee('While the home page is a draft');
+    }
+
     public function test_a_blog_with_posts_cannot_be_deleted(): void
     {
         $this->actingAs(User::factory()->create());

@@ -12,11 +12,7 @@
 >
     <h1 @class(['page-title', 'visually-hidden' => ! $entry->showsTitle()])>{{ $entry->title }}</h1>
 
-    @if ($entry->published_at)
-        <div class="post-meta">
-            Published on <time datetime="{{ \App\Models\Theme::localTime($entry->published_at)->toDateString() }}">{{ \App\Models\Theme::localTime($entry->published_at)->format('F j, Y') }}</time>
-        </div>
-    @endif
+    <x-site.publish-date :entry="$entry" />
 
     <article class="prose">
         {!! $entry->bodyHtml() !!}

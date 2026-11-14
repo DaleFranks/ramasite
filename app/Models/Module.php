@@ -5,6 +5,7 @@ namespace App\Models;
 use App\BandEdge;
 use App\BoxStyle;
 use App\Markdown;
+use App\Models\Concerns\PlacedByShortcode;
 use Database\Factories\ModuleFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -47,11 +48,21 @@ class Module extends Model
     /** @use HasFactory<ModuleFactory> */
     use HasFactory;
 
+    use PlacedByShortcode;
+
     protected static function booted(): void
     {
         static::deleting(function (Module $module): bool {
             return ! $module->isFooter();
         });
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected static function placingShortcodes(): array
+    {
+        return ['module'];
     }
 
     /**
@@ -122,8 +133,14 @@ class Module extends Model
             ->implode(' ');
 
         $style = $backgroundImage ? ' style="'.e("background-image: url('{$backgroundImage->url()}')").'"' : '';
+        $body = $this->bodyHtml($menu);
 
-        return '<div class="'.e($classes).'"'.$style.'>'."\n".$this->bodyHtml($menu)."\n".'</div>';
+        // A module with the slug "cta" is styled as a Dark panel by its slug, as in the old CMS
+        if ($this->style?->showsLinksAsButtons() || $this->slug === 'cta') {
+            $body = Markdown::withButtonLinks($body);
+        }
+
+        return '<div class="'.e($classes).'"'.$style.'>'."\n".$body."\n".'</div>';
     }
 
     /**
@@ -136,7 +153,7 @@ class Module extends Model
      */
     public function bodyHtml(?Collection $menu = null): string
     {
-        $markdown = str_ireplace('[curr-year]', (string) now()->year, (string) $this->body);
+        $markdown = str_ireplace('[curr-year]', (string) Theme::localTime(now())->year, (string) $this->body);
 
         if (stripos($markdown, '[site-name]') !== false) {
             $markdown = str_ireplace('[site-name]', e(Theme::current()->site_name), $markdown);

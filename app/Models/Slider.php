@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\PlacedByShortcode;
 use App\SliderAnimation;
 use App\SliderArrowStyle;
 use Database\Factories\SliderFactory;
@@ -46,6 +47,8 @@ class Slider extends Model
     /** @use HasFactory<SliderFactory> */
     use HasFactory;
 
+    use PlacedByShortcode;
+
     /**
      * @var array<string, mixed>
      */
@@ -53,6 +56,14 @@ class Slider extends Model
         'animation' => 'slide',
         'arrow_style' => 'square',
     ];
+
+    /**
+     * @return list<string>
+     */
+    protected static function placingShortcodes(): array
+    {
+        return ['slider'];
+    }
 
     /**
      * Get the attributes that should be cast.

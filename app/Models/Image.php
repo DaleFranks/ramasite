@@ -101,6 +101,10 @@ class Image extends Model
         $filename = self::uniqueFilename(pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME), $extension);
         $path = $file->storeAs(self::DIRECTORY, $filename, self::DISK);
 
+        if ($path === false) {
+            throw new RuntimeException(LibraryFile::NOT_SAVED_MESSAGE);
+        }
+
         $absolutePath = Storage::disk(self::DISK)->path($path);
         [$width, $height] = getimagesize($absolutePath) ?: [0, 0];
 

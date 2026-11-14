@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\BoxStyle;
 use App\Markdown;
+use App\Models\Concerns\PlacedByShortcode;
 use App\TextAlignment;
 use Database\Factories\CardFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -26,6 +27,16 @@ class Card extends Model
 {
     /** @use HasFactory<CardFactory> */
     use HasFactory;
+
+    use PlacedByShortcode;
+
+    /**
+     * @return list<string>
+     */
+    protected static function placingShortcodes(): array
+    {
+        return ['card', 'cards'];
+    }
 
     /**
      * Get the attributes that should be cast.
@@ -55,6 +66,10 @@ class Card extends Model
         ])->filter()->implode(' ');
 
         $body = Markdown::toHtml((string) $this->body);
+
+        if ($this->style?->showsLinksAsButtons()) {
+            $body = Markdown::withButtonLinks($body);
+        }
 
         return '<div class="'.e($classes).'">'."\n".$body."\n".'</div>';
     }

@@ -40,6 +40,9 @@ class SiteFolderTest extends TestCase
 
     public function test_a_site_in_a_folder_keeps_every_address_inside_it(): void
     {
+        // The share picture's domain comes from the saved address
+        config(['app.url' => 'http://localhost/blog']);
+
         $this->visitInFolder('/about')
             ->assertOk()
             ->assertSee('href="http://localhost/blog/css/site.css', false)

@@ -9,6 +9,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Support\Icons\Heroicon;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use RuntimeException;
 
 class ManageLibraryFiles extends ManageRecords
 {
@@ -27,9 +28,20 @@ class ManageLibraryFiles extends ManageRecords
                         ->multiple()
                         ->helperText('Drop one or more files here: '.LibraryFile::typeList().'. A file whose name is already taken is saved with a number added, so nothing is replaced.'),
                 ])
-                ->action(function (array $data): void {
-                    $files = collect($data['files'])
-                        ->map(fn (TemporaryUploadedFile $file): LibraryFile => LibraryFile::storeUpload($file));
+                ->action(function (Action $action, array $data): void {
+                    try {
+                        $files = collect($data['files'])
+                            ->map(fn (TemporaryUploadedFile $file): LibraryFile => LibraryFile::storeUpload($file));
+                    } catch (RuntimeException $exception) {
+                        Notification::make()
+                            ->danger()
+                            ->title('Not every file was uploaded')
+                            ->body($exception->getMessage())
+                            ->persistent()
+                            ->send();
+
+                        $action->halt();
+                    }
 
                     Notification::make()
                         ->success()

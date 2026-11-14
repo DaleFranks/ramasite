@@ -13,6 +13,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use PHPUnit\Framework\Attributes\DataProvider;
+use RuntimeException;
 use Tests\TestCase;
 
 class SetupTest extends TestCase
@@ -208,6 +209,17 @@ class SetupTest extends TestCase
         );
     }
 
+    public function test_saving_the_address_keeps_the_settings_files_permissions(): void
+    {
+        chmod($this->storagePath.'/.env', 0600);
+
+        $this->post('https://example.test/setup', $this->setUpDetails());
+
+        clearstatcache();
+        $this->assertSame(0600, fileperms($this->storagePath.'/.env') & 0777);
+        $this->assertStringContainsString('APP_URL=https://example.test', File::get($this->storagePath.'/.env'));
+    }
+
     public function test_finishing_setup_on_plain_http_saves_the_http_address(): void
     {
         $this->post('http://example.test/setup', $this->setUpDetails());
@@ -272,6 +284,19 @@ class SetupTest extends TestCase
         $this->assertTrue(Entry::query()->where('path', Entry::HOME_PATH)->exists());
         $this->assertSame(['contact', 'newsletter'], Form::query()->orderBy('slug')->pluck('slug')->all());
         $this->assertFileExists($this->storagePath.'/app/installed');
+    }
+
+    public function test_a_setup_that_fails_partway_leaves_nothing_behind_and_can_be_tried_again(): void
+    {
+        $details = $this->setUpDetails();
+        Entry::creating(fn () => throw new RuntimeException('The disk is full.'));
+
+        $this->post('/setup', $details)->assertServerError();
+
+        $this->assertSame(0, User::query()->count());
+        $this->assertFalse(Installation::isComplete());
+        $this->assertFileExists($this->keyFile());
+        $this->get('/setup')->assertOk();
     }
 
     public function test_once_setup_is_done_the_site_works_and_the_setup_screen_is_gone(): void

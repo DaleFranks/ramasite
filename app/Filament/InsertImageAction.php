@@ -3,7 +3,9 @@
 namespace App\Filament;
 
 use App\Filament\Resources\Images\ImageResource;
+use App\Markdown;
 use App\Models\Image;
+use Closure;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -95,6 +97,14 @@ class InsertImageAction
                 TextInput::make('alt_text')
                     ->label('Alt text')
                     ->maxLength(255)
+                    // In the shortcode, alt text that looks like a width or alignment would be read as one
+                    ->rule(fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                        $altText = trim(str_replace(['|', ']'], ' ', (string) $value));
+
+                        if ($get('source') === self::SOURCE_ADDRESS && (Markdown::isImageSize($altText) || Markdown::isImageAlignment($altText))) {
+                            $fail('On its own, "'.$altText.'" would be read as the image\'s size or position. Add a word or two, such as "Left side of the building".');
+                        }
+                    })
                     ->helperText(fn (Get $get): string => $get('source') === self::SOURCE_ADDRESS
                         ? 'Read aloud by screen readers and shown if the image can\'t load. It goes in the shortcode, so it also shows as a tooltip.'
                         : 'Read aloud by screen readers and shown if the image can\'t load. It\'s saved in the library, for wherever this image is used without its own alt text.'),
@@ -170,11 +180,22 @@ class InsertImageAction
      */
     public static function matching(string $search): Builder
     {
+        $pattern = self::likePattern($search);
+
         return Image::query()
             ->where(fn (Builder $images): Builder => $images
-                ->where('filename', 'like', '%'.$search.'%')
-                ->orWhere('alt_text', 'like', '%'.$search.'%'))
+                ->whereRaw("filename like ? escape '\\'", [$pattern])
+                ->orWhereRaw("alt_text like ? escape '\\'", [$pattern]))
             ->orderBy('filename');
+    }
+
+    /**
+     * A search as a "contains" pattern for LIKE, with "%" and "_" meaning
+     * themselves rather than standing for any characters.
+     */
+    public static function likePattern(string $search): string
+    {
+        return '%'.str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $search).'%';
     }
 
     /**

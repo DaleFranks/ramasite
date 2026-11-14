@@ -11,6 +11,8 @@
 >
     <h1 @class(['page-title', 'visually-hidden' => ! $entry->showsTitle()])>{{ $entry->title }}</h1>
 
+    <x-site.publish-date :entry="$entry" />
+
     <article class="prose">
         {!! $entry->bodyHtml() !!}
     </article>

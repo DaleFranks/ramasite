@@ -13,6 +13,15 @@ enum BoxStyle: string implements HasLabel
     case Light = 'light';
     case Primary = 'primary';
 
+    /**
+     * Whether a link on a line of its own shows as a button, as on the Dark
+     * and Primary panels. Links within text always stay ordinary links.
+     */
+    public function showsLinksAsButtons(): bool
+    {
+        return $this !== self::Light;
+    }
+
     public function getLabel(): string
     {
         return match ($this) {

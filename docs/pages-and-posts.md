@@ -19,14 +19,15 @@ Everything with its own address on the site is listed here. There are three type
 
 Social media sites remember a link's preview once they've seen it. After changing a page's featured image, use Facebook's [Sharing Debugger](https://developers.facebook.com/tools/debug/) (paste the link and click **Scrape Again**) to refresh it there.
 
-The page with the slug **`home`** is the home page, shown at the site's main address.
+The page with the slug **`home`** is the home page, shown at the site's main address. So the main address always has a page, its slug and type can't be changed and it can't be deleted. It can still be set to Draft, but visitors to the main address then see "Page not found".
 
 Some addresses are used by the CMS itself and can't be taken: `admin`, `setup`, `uploads`, `forms` and a few others. Neither can `css`, `fonts` and `js`, which are folders the web server answers itself.
 
 ## Publishing
 
 - **Status**: **Draft** pages are hidden from visitors; **Published** ones are on the site.
-- **Publish date**: leave it empty to publish straight away. A date in the future schedules the page or post: it appears on its own at that time. For posts, the date is shown with the post and in the blog's list. Dates are entered and shown in the site's timezone, set on the [Theme](theme.md) screen.
+- **Publish date**: leave it empty to publish straight away; it's filled in with the moment the page or post is first published. A date in the future schedules it: it appears on its own at that time. Dates are entered and shown in the site's timezone, set on the [Theme](theme.md) screen.
+- **Show the publish date**: whether the date appears under the title on the site, and for a post, in its blog's list. It starts on for posts and off for pages and blogs, and can be switched either way.
 
 ### Previewing
 

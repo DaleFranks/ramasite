@@ -142,6 +142,41 @@ class InsertImageActionTest extends TestCase
             ->assertNotDispatched('insert-into-editor');
     }
 
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function altTextReadAsSizeOrPosition(): array
+    {
+        return [
+            'an alignment' => ['Left'],
+            'a year, read as a width' => ['2024'],
+            'a percentage' => ['50%'],
+        ];
+    }
+
+    #[DataProvider('altTextReadAsSizeOrPosition')]
+    public function test_alt_text_for_an_address_that_would_be_misread_is_refused(string $altText): void
+    {
+        Livewire::test(CreateEntry::class)
+            ->callAction(self::insertImage(), data: ['source' => 'address', 'address' => 'https://example.com/photo.jpg', 'alt_text' => $altText])
+            ->assertHasFormErrors(['alt_text'])
+            ->assertNotDispatched('insert-into-editor');
+    }
+
+    public function test_alt_text_with_more_words_and_library_alt_text_are_accepted(): void
+    {
+        Livewire::test(CreateEntry::class)
+            ->callAction(self::insertImage(), data: ['source' => 'address', 'address' => 'https://example.com/photo.jpg', 'alt_text' => 'Left side of the building'])
+            ->assertHasNoFormErrors()
+            ->assertDispatched('insert-into-editor', text: '[image:https://example.com/photo.jpg|Left side of the building]');
+
+        $image = Image::factory()->create(['filename' => 'team.jpg']);
+
+        Livewire::test(CreateEntry::class)
+            ->callAction(self::insertImage(), data: ['source' => 'library', 'image' => $image->id, 'alt_text' => 'Left'])
+            ->assertHasNoFormErrors();
+    }
+
     private static function insertImage(): TestAction
     {
         return TestAction::make('insertImage')->schemaComponent('body');

@@ -86,9 +86,15 @@ class RedirectResource extends Resource
                     ->validationMessages([
                         'regex' => 'Start with "/" for an address on this site, e.g. "/services", or give a full address starting with "https://".',
                     ])
-                    ->rule(fn (Get $get): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get): void {
+                    ->rule(fn (Get $get, ?Redirect $record): Closure => function (string $attribute, mixed $value, Closure $fail) use ($get, $record): void {
                         if (! preg_match('#^https?://#i', (string) $value) && Redirect::normalizePath((string) $value) === Redirect::normalizePath((string) $get('from_path'))) {
                             $fail('A redirect can\'t point to the address it comes from.');
+
+                            return;
+                        }
+
+                        if (Redirect::wouldLoop((string) $get('from_path'), (string) $value, $record?->getKey())) {
+                            $fail('Other redirects lead from there back to /'.Redirect::normalizePath((string) $get('from_path')).', so visitors would go round in a loop.');
                         }
                     })
                     ->helperText('Where visitors go instead, e.g. "/services", or a full web address.'),

@@ -82,6 +82,26 @@ class SliderResourceTest extends TestCase
         $this->assertStringContainsString('harbour-sunset.jpg', (string) SliderForm::imageOptionLabel($oldest->id));
     }
 
+    public function test_an_image_found_by_its_alt_text_shows_it(): void
+    {
+        $image = Image::factory()->create(['filename' => 'img-4821.jpg', 'alt_text' => 'The harbour at dusk']);
+
+        $results = SliderForm::imageSearchResults('harbour');
+
+        $this->assertArrayHasKey($image->id, $results);
+        $this->assertStringContainsString('The harbour at dusk', $results[$image->id]);
+    }
+
+    public function test_percent_and_underscore_in_a_search_mean_themselves(): void
+    {
+        $underscored = Image::factory()->create(['filename' => 'img_2.jpg', 'alt_text' => null]);
+        $hyphenated = Image::factory()->create(['filename' => 'img-2.jpg', 'alt_text' => null]);
+
+        $this->assertSame([$underscored->id], array_keys(SliderForm::imageSearchResults('img_2')));
+        $this->assertSame([], SliderForm::imageSearchResults('%'));
+        $this->assertArrayHasKey($hyphenated->id, SliderForm::imageSearchResults('img-2'));
+    }
+
     public function test_a_slide_saves_its_text_position_and_colors(): void
     {
         $this->fakeRepeaters();

@@ -55,6 +55,11 @@ class Theme extends Model
     use HasFactory;
 
     /**
+     * The folder in public/uploads that the Theme screen's uploads go in.
+     */
+    public const IMAGE_DIRECTORY = 'theme';
+
+    /**
      * The original look.
      *
      * @var array<string, mixed>
@@ -119,9 +124,6 @@ class Theme extends Model
     }
 
     /**
-     * Put every setting except the site name back to the original look.
-     */
-    /**
      * The timezone dates are shown and entered in, chosen on the Theme screen.
      * Times are stored in UTC whatever it is, so changing it never moves the
      * moment a post appears.
@@ -139,6 +141,9 @@ class Theme extends Model
         return $time->copy()->setTimezone(self::siteTimezone());
     }
 
+    /**
+     * Put every setting except the site name and timezone back to the original look.
+     */
     public function resetToDefaults(): void
     {
         $this->update(self::DEFAULTS);
@@ -284,6 +289,43 @@ class Theme extends Model
     public function showsSiteName(): bool
     {
         return $this->site_name_position !== SiteNamePosition::Hidden || ! $this->logoUrl();
+    }
+
+    /**
+     * The uploaded images the theme uses: its logo, tab icon and any background
+     * images among the detailed settings, as paths in the uploads folder.
+     *
+     * @return list<string>
+     */
+    public function imagePaths(): array
+    {
+        $imageOptions = collect(ThemeOptions::all())
+            ->filter(fn (array $option): bool => $option['type'] === 'image')
+            ->keys()
+            ->map(fn (string $key): mixed => $this->options[$key] ?? null);
+
+        return collect([$this->logo_path, $this->favicon_path, ...$imageOptions])
+            ->filter(fn (mixed $path): bool => is_string($path) && $path !== '')
+            ->unique()
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Delete the theme images that were in use before a change and aren't any
+     * more, such as a replaced logo, so they don't build up and fill backups.
+     * Only the theme's own folder is touched.
+     *
+     * @param  list<string>  $usedBefore  imagePaths() from before the change.
+     */
+    public function deleteImagesNoLongerUsed(array $usedBefore): void
+    {
+        $unused = array_filter(
+            array_diff($usedBefore, $this->imagePaths()),
+            fn (string $path): bool => str_starts_with($path, self::IMAGE_DIRECTORY.'/'),
+        );
+
+        Storage::disk('uploads')->delete(array_values($unused));
     }
 
     public function logoUrl(): ?string

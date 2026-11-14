@@ -59,18 +59,28 @@ class SiteAddress
      */
     public static function canonicalRoot(): string
     {
+        return self::canonicalOrigin().rtrim(request()->getBaseUrl(), '/');
+    }
+
+    /**
+     * canonicalRoot() without the site's folder, such as "https://example.com",
+     * for addresses that already include the folder, such as an uploaded
+     * image's "/site/uploads/images/team.jpg".
+     */
+    public static function canonicalOrigin(): string
+    {
         $request = request();
         $saved = (string) config('app.url');
         $savedScheme = strtolower((string) parse_url($saved, PHP_URL_SCHEME));
         $savedHost = strtolower((string) parse_url($saved, PHP_URL_HOST));
 
         if (! in_array($savedScheme, ['http', 'https'], true) || self::withoutWww($savedHost) !== self::withoutWww($request->getHost())) {
-            return $request->root();
+            return $request->getSchemeAndHttpHost();
         }
 
         $port = parse_url($saved, PHP_URL_PORT);
 
-        return $savedScheme.'://'.$savedHost.($port ? ':'.$port : '').rtrim($request->getBaseUrl(), '/');
+        return $savedScheme.'://'.$savedHost.($port ? ':'.$port : '');
     }
 
     /**
@@ -115,8 +125,11 @@ class SiteAddress
         $line = 'APP_URL='.$address;
         $pattern = '/^APP_URL=.*$/m';
 
+        // The file keeps the permissions it has, which a host may have tightened
+        $permissions = @fileperms($file);
+
         File::replace($file, preg_match($pattern, $settings)
             ? preg_replace_callback($pattern, fn (): string => $line, $settings)
-            : rtrim($settings)."\n".$line."\n", 0644);
+            : rtrim($settings)."\n".$line."\n", $permissions === false ? 0644 : $permissions & 0777);
     }
 }

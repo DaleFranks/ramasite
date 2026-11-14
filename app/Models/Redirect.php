@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Database\Factories\RedirectFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
@@ -32,6 +33,12 @@ class Redirect extends Model
 {
     /** @use HasFactory<RedirectFactory> */
     use HasFactory;
+
+    /**
+     * How many redirects in a row are followed when checking for a loop.
+     * Browsers give up long before this.
+     */
+    private const LONGEST_TRAIL = 20;
 
     /**
      * @var array<string, mixed>
@@ -87,7 +94,7 @@ class Redirect extends Model
      * The redirect for an address: an exact match, or else the wildcard
      * covering it with the longest (most specific) beginning.
      */
-    public static function findFor(string $path): ?self
+    public static function findFor(string $path, ?int $exceptId = null): ?self
     {
         $path = self::normalizePath($path);
 
@@ -95,8 +102,10 @@ class Redirect extends Model
             return null;
         }
 
-        return self::query()->where('from_path', $path)->first()
-            ?? self::query()
+        $redirects = fn () => self::query()->when($exceptId !== null, fn (Builder $query): Builder => $query->whereKeyNot($exceptId));
+
+        return $redirects()->where('from_path', $path)->first()
+            ?? $redirects()
                 ->where('from_path', 'like', '%*')
                 ->get()
                 ->filter(fn (Redirect $redirect): bool => str_starts_with($path, rtrim($redirect->from_path, '*')))
@@ -115,11 +124,7 @@ class Redirect extends Model
      */
     public function targetFor(string $path, string $queryString = ''): string
     {
-        $target = $this->to;
-
-        if ($this->isWildcard() && str_ends_with($target, '*')) {
-            $target = substr($target, 0, -1).self::restOfPath($path, rtrim($this->from_path, '*'));
-        }
+        $target = $this->destinationFor($path);
 
         if (! preg_match('#^https?://#i', $target)) {
             $target = url('/'.ltrim($target, '/'));
@@ -130,6 +135,59 @@ class Redirect extends Model
         }
 
         return $target;
+    }
+
+    /**
+     * Where a visitor to the given address is sent, as the redirect has it: a
+     * full web address, or an address on this site such as "/services".
+     */
+    public function destinationFor(string $path): string
+    {
+        if ($this->isWildcard() && str_ends_with($this->to, '*')) {
+            return substr($this->to, 0, -1).self::restOfPath($path, rtrim($this->from_path, '*'));
+        }
+
+        return $this->to;
+    }
+
+    /**
+     * Whether a redirect from one address to another would send visitors round
+     * in a loop through the other redirects, such as "a" to "/b" when "b"
+     * already goes to "/a". The trail is followed on this site only, and ends
+     * at a published page, as visits there are never redirected.
+     *
+     * @param  int|null  $exceptId  The redirect being edited, whose saved version doesn't count.
+     */
+    public static function wouldLoop(string $fromPath, string $to, ?int $exceptId = null): bool
+    {
+        $from = self::normalizePath($fromPath);
+        $next = $to;
+
+        for ($step = 0; $step < self::LONGEST_TRAIL; $step++) {
+            if (preg_match('#^https?://#i', $next)) {
+                return false;
+            }
+
+            $path = self::normalizePath(rtrim($next, '*'));
+
+            if ($path === $from || (str_ends_with($from, '*') && str_starts_with($path, rtrim($from, '*')))) {
+                return true;
+            }
+
+            if ($path === '' || Entry::query()->published()->whereRaw('lower(path) = ?', [$path])->exists()) {
+                return false;
+            }
+
+            $redirect = self::findFor($path, $exceptId);
+
+            if ($redirect === null) {
+                return false;
+            }
+
+            $next = $redirect->destinationFor($path);
+        }
+
+        return true;
     }
 
     /**

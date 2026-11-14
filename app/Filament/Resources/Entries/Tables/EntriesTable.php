@@ -60,6 +60,7 @@ class EntriesTable
                 SelectFilter::make('status')
                     ->options(EntryStatus::class),
             ])
+            ->checkIfRecordIsSelectableUsing(fn (Entry $record): bool => ! $record->isHomePage())
             ->recordActions([
                 ViewOnSiteAction::make()
                     ->iconButton()

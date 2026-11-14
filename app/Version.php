@@ -37,8 +37,11 @@ class Version
         $path = $root.'/'.preg_replace('/[^A-Za-z0-9.-]+/', '-', self::current());
 
         if (! is_dir($path) && is_dir($root)) {
+            // Not this version's own, which a visit arriving at the same moment may just have made
             foreach (File::directories($root) as $olderVersion) {
-                File::deleteDirectory($olderVersion);
+                if ($olderVersion !== $path) {
+                    File::deleteDirectory($olderVersion);
+                }
             }
 
             // Compiled before versions had folders of their own

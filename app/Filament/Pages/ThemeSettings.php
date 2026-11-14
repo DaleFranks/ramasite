@@ -132,7 +132,7 @@ class ThemeSettings extends Page
                                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
                                     ->maxSize(2048)
                                     ->disk('uploads')
-                                    ->directory('theme'),
+                                    ->directory(Theme::IMAGE_DIRECTORY),
                                 FileUpload::make('favicon_path')
                                     ->label('Browser tab icon')
                                     ->helperText('A small square image, e.g. 64 × 64 pixels.')
@@ -140,7 +140,7 @@ class ThemeSettings extends Page
                                     ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/x-icon', 'image/vnd.microsoft.icon'])
                                     ->maxSize(512)
                                     ->disk('uploads')
-                                    ->directory('theme'),
+                                    ->directory(Theme::IMAGE_DIRECTORY),
                             ]),
                             self::optionsSection('Branding', 'Logo'),
                         ]),
@@ -321,6 +321,7 @@ class ThemeSettings extends Page
     protected function saveSettings(): void
     {
         $theme = Theme::current();
+        $imagesBefore = $theme->imagePaths();
         $state = $this->form->getState();
         $state['options'] = self::chosenOptions([
             ...self::otherFooterStylesOptions($theme->options ?? [], $state['footer_style'] ?? null),
@@ -328,6 +329,7 @@ class ThemeSettings extends Page
         ]);
 
         $theme->update($state);
+        $theme->deleteImagesNoLongerUsed($imagesBefore);
         $this->rememberLoadedSettings();
 
         Notification::make()
@@ -345,7 +347,9 @@ class ThemeSettings extends Page
             ->modalDescription('All theme settings except the site name and timezone go back to the original look, every detailed setting goes back to automatic, and the logo and browser tab icon are removed.')
             ->action(function (): void {
                 $theme = Theme::current();
+                $imagesBefore = $theme->imagePaths();
                 $theme->resetToDefaults();
+                $theme->deleteImagesNoLongerUsed($imagesBefore);
                 $this->fillForm($theme);
                 $this->rememberLoadedSettings();
 
@@ -447,7 +451,7 @@ class ThemeSettings extends Page
             'choice' => Select::make($name)->options($option['choices'])->placeholder(isset($option['always_shown']) ? null : $automatic)->selectablePlaceholder(! isset($option['always_shown'])),
             'toggle' => Toggle::make($name)->inline(false),
             'image' => FileUpload::make($name)->image()->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
-                ->maxSize(4096)->disk('uploads')->directory('theme'),
+                ->maxSize(4096)->disk('uploads')->directory(Theme::IMAGE_DIRECTORY),
         };
 
         if (isset($option['footer_style'])) {

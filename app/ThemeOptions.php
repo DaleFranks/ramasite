@@ -135,9 +135,10 @@ class ThemeOptions
                 fn (Theme $theme): string => $theme->color_secondary, '--header-nav-toggle-color'),
             'header_height' => self::px('Header', 'Header bar', 'Height',
                 fn (Theme $theme): float => $theme->site_name_position === SiteNamePosition::Below ? 96 : 70, '--header-height', 40, 200,
-                'Taller automatically when the site name is below the logo.'),
+                'Taller automatically when the site name is below the logo. With the logo centered, this is the height on phones; wider screens use 128 px to fit the menu below the logo.'),
             'header_height_scrolled' => self::px('Header', 'Header bar', 'Height, once scrolled',
-                fn (Theme $theme): float => (float) $theme->option('header_height'), '--header-height-scrolled', 40, 200),
+                fn (Theme $theme): float => (float) $theme->option('header_height'), '--header-height-scrolled', 40, 200,
+                'With the logo centered, this is the height on phones; wider screens stay at 128 px.'),
             'header_background_image' => [
                 'tab' => 'Header', 'section' => 'Header bar', 'label' => 'Background image', 'type' => 'image', 'default' => null,
                 'help' => 'Optional. Covers the header behind the logo and menu.', 'var' => '--header-bg-image',

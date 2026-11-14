@@ -38,6 +38,28 @@ class ImageLibraryTest extends TestCase
         }
     }
 
+    public function test_an_image_that_cannot_be_saved_is_not_added_to_the_library(): void
+    {
+        // Kept in a variable: the fake's file is deleted once nothing holds it
+        $fake = UploadedFile::fake()->image('team.png');
+        $upload = new class($fake->getPathname(), 'team.png', null, null, true) extends UploadedFile
+        {
+            public function storeAs($path, $name = null, $options = []): string|false
+            {
+                return false;
+            }
+        };
+
+        try {
+            Image::storeUpload($upload);
+            $this->fail('The upload was added without its file.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringStartsWith('The file couldn\'t be saved', $exception->getMessage());
+        }
+
+        $this->assertSame(0, Image::query()->count());
+    }
+
     public function test_an_upload_keeps_a_tidied_version_of_its_name(): void
     {
         $image = Image::storeUpload(UploadedFile::fake()->image('Team Photo.JPG', 800, 600));

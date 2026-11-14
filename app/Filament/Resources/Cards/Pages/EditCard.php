@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Cards\Pages;
 
+use App\Filament\InUseCheck;
 use App\Filament\Resources\Cards\CardResource;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
@@ -13,7 +14,8 @@ class EditCard extends EditRecord
     protected function getHeaderActions(): array
     {
         return [
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->before(InUseCheck::beforeDeleting()),
         ];
     }
 }
