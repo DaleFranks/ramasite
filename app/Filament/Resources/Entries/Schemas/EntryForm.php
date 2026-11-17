@@ -167,7 +167,8 @@ class EntryForm
                                 Toggle::make('show_publish_date')
                                     ->label('Show the publish date')
                                     ->default(fn (): bool => Entry::showsPublishDateByDefault(self::typeFromAddress()))
-                                    ->formatStateUsing(fn (?bool $state, ?Entry $record): bool => $state ?? Entry::showsPublishDateByDefault($record?->type))
+                                    // From the entry, as the switch has already turned "never set" into off
+                                    ->formatStateUsing(fn (bool $state, ?Entry $record): bool => $record?->showsPublishDate() ?? $state)
                                     ->helperText('Under the title, on the site. A post shows it in its blog\'s list too. Posts show it unless switched off; pages don\'t unless switched on.'),
                             ]),
                         Section::make('Layout')

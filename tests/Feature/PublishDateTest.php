@@ -84,6 +84,25 @@ class PublishDateTest extends TestCase
             ->assertSchemaStateSet(['show_publish_date' => true]);
     }
 
+    public function test_an_entry_whose_switch_was_never_set_opens_showing_what_the_site_does_and_saves_unchanged(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $blog = Entry::factory()->blog()->published()->create(['slug' => 'news']);
+        $post = Entry::factory()->post($blog)->published()->create(['slug' => 'launch', 'show_publish_date' => null]);
+        $page = Entry::factory()->published()->create(['slug' => 'about', 'show_publish_date' => null]);
+
+        Livewire::test(EditEntry::class, ['record' => $page->getRouteKey()])
+            ->assertSchemaStateSet(['show_publish_date' => false]);
+
+        Livewire::test(EditEntry::class, ['record' => $post->getRouteKey()])
+            ->assertSchemaStateSet(['show_publish_date' => true])
+            ->fillForm(['title' => 'Edited later'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->get('/news')->assertSee('<div class="feed-date">', false);
+    }
+
     public function test_the_update_gives_published_entries_without_a_date_the_day_they_were_created(): void
     {
         $migration = 'database/migrations/2026_11_14_043059_add_show_publish_date_to_entries_table.php';
