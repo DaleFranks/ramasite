@@ -158,8 +158,9 @@ class Backup
             This zip holds everything that makes the site its own:
 
               database/database.sqlite   pages, posts, cards, modules, sliders, forms,
-                                         form submissions, redirects, the Theme and
-                                         Email settings, and the admin accounts
+                                         form submissions, social links, redirects,
+                                         the Theme and Email settings, and the admin
+                                         accounts
               public/uploads/            the image and file libraries, logo and tab icon
               .env                       the site's settings file; its key unlocks the
                                          saved SMTP password and two-step login

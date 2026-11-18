@@ -10,9 +10,9 @@ use App\LogoPosition;
 use App\Models\Module;
 use App\Models\Theme;
 use App\SiteNamePosition;
-use App\TextAlignment;
 use App\ThemeFonts;
 use App\ThemeOptions;
+use App\TopBarAlignment;
 use ArrayObject;
 use BackedEnum;
 use DateTimeZone;
@@ -182,7 +182,7 @@ class ThemeSettings extends Page
                                         ->label('Text')
                                         ->maxLength(255)
                                         ->placeholder('Call us: (760) 555-0100')
-                                        ->helperText('Leave empty for no bar. For a number visitors can tap to call: [(760) 555-0100](tel:+17605550100). **Bold** works too.')
+                                        ->helperText('Leave empty for no bar. For a number visitors can tap to call: [(760) 555-0100](tel:+17605550100). **Bold** works too, and [social:slug] places a set from the Social links screen.')
                                         ->columnSpanFull(),
                                     Select::make('top_bar_style')
                                         ->label('Style')
@@ -191,9 +191,10 @@ class ThemeSettings extends Page
                                         ->required(),
                                     Select::make('top_bar_alignment')
                                         ->label('Alignment')
-                                        ->options(TextAlignment::class)
+                                        ->options(TopBarAlignment::class)
                                         ->selectablePlaceholder(false)
-                                        ->required(),
+                                        ->required()
+                                        ->helperText('Spread puts the text at the left and any social links at the right.'),
                                     Toggle::make('top_bar_stays_visible')
                                         ->label('Keep the top bar visible when scrolled')
                                         ->helperText('When off, it folds away as the header shrinks, and comes back at the top of the page.')

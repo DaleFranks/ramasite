@@ -6,12 +6,13 @@ use App\Models\Card;
 use App\Models\Form;
 use App\Models\Module;
 use App\Models\Slider;
+use App\Models\SocialLinkSet;
 use Closure;
 use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 
 /**
- * Stops a module, card, slider or form being deleted while content still
+ * Stops a module, card, slider, form or set of social links being deleted while content still
  * places it, and says where, as the image and file libraries do.
  */
 class InUseCheck
@@ -21,7 +22,7 @@ class InUseCheck
      */
     public static function beforeDeleting(): Closure
     {
-        return function (DeleteAction $action, Module|Card|Slider|Form $record): void {
+        return function (DeleteAction $action, Module|Card|Slider|Form|SocialLinkSet $record): void {
             if ($record->usages()->isEmpty()) {
                 return;
             }

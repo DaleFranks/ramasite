@@ -5,7 +5,7 @@ How each screen in the admin (at `/admin`) works.
 **Start here**
 
 - [Getting started](getting-started.md): the first things to set up, and the Dashboard
-- [Writing content](writing-content.md): Markdown, and the shortcodes that place images, file links, videos, cards, modules, sliders and forms
+- [Writing content](writing-content.md): Markdown, and the shortcodes that place images, file links, videos, cards, modules, sliders, forms and social links
 
 **Content**
 
@@ -15,6 +15,7 @@ How each screen in the admin (at `/admin`) works.
 - [Cards and Modules](cards-and-modules.md): reusable boxes and sections, and the footer
 - [Sliders](sliders.md): rotating images
 - [Forms](forms.md): contact forms, newsletter sign-ups and their submissions
+- [Social links](social-links.md): rows of social media logos linking to your profiles
 - [Redirects](redirects.md): sending old addresses to new ones, and `www.` to your main address
 
 **Settings**

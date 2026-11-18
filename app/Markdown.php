@@ -9,6 +9,7 @@ use App\Models\Image;
 use App\Models\LibraryFile;
 use App\Models\Module;
 use App\Models\Slider;
+use App\Models\SocialLinkSet;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
@@ -20,6 +21,7 @@ use Illuminate\Support\Str;
  * - [form:slug] places a form built on the Forms screen
  * - [module:slug], [card:slug] and [cards: slug-1, slug-2] place modules and cards (pages only)
  * - [slider:slug] places a slider (pages only)
+ * - [social:slug|align] places a set of social links built on the Social links screen
  *
  * Ordinary Markdown images, ![description](team.jpg), also find their file in
  * the library.
@@ -28,15 +30,16 @@ use Illuminate\Support\Str;
  * and filled in afterwards, so its HTML is never converted twice. Videos,
  * forms, modules, cards and sliders are blocks, so each gets a paragraph of its
  * own: text written on the same line carries on after the block instead of
- * ending up inside it. Images stay in the line, so text written beside them
- * wraps around them. A
+ * ending up inside it. Images and social links stay in the line, so text
+ * written beside them wraps around them (social links given an alignment
+ * take a line of their own). A
  * shortcode naming something that doesn't exist is left as written, so the
  * mistake shows. Inside `code` or a fenced code block, shortcodes are shown
  * as written, so a page can explain how to use them.
  */
 class Markdown
 {
-    private const SHORTCODE_PATTERN = '/\[(image|file|youtube|form|module|card|cards|slider):([^\]]+)\]/i';
+    private const SHORTCODE_PATTERN = '/\[(image|file|youtube|form|module|card|cards|slider|social):([^\]]+)\]/i';
 
     private const MARKDOWN_IMAGE_PATTERN = '/!\[([^\]]*)\]\(\s*<?([^\s)>]+)>?(?:\s+(?:"([^"]*)"|\'([^\']*)\'))?\s*\)/';
 
@@ -62,7 +65,7 @@ class Markdown
      */
     public static function toHtml(string $markdown, bool $withBlocks = false): string
     {
-        /** @var list<array{kind: string, value: string, original: string, image?: array{file: string, size: ?string, align: ?string, description: ?string}}> $shortcodes */
+        /** @var list<array{kind: string, value: string, original: string, align?: ?string, image?: array{file: string, size: ?string, align: ?string, description: ?string}}> $shortcodes */
         $shortcodes = [];
 
         /** @var list<string> $code */
@@ -93,7 +96,7 @@ class Markdown
         $markdown = preg_replace_callback(self::SHORTCODE_PATTERN, function (array $match) use (&$shortcodes, $withBlocks): string {
             $kind = strtolower($match[1]);
 
-            if (! $withBlocks && ! in_array($kind, ['image', 'file', 'youtube', 'form'], true)) {
+            if (! $withBlocks && ! in_array($kind, ['image', 'file', 'youtube', 'form', 'social'], true)) {
                 return $match[0];
             }
 
@@ -101,6 +104,12 @@ class Markdown
 
             if ($kind === 'image') {
                 $shortcodes[] = [...$shortcode, 'image' => self::imageOptions($shortcode['value'])];
+
+                return self::inlinePlaceholder(array_key_last($shortcodes));
+            }
+
+            if ($kind === 'social') {
+                $shortcodes[] = [...$shortcode, ...self::socialOptions($shortcode['value'])];
 
                 return self::inlinePlaceholder(array_key_last($shortcodes));
             }
@@ -135,10 +144,11 @@ class Markdown
         $cards = self::load(Card::class, $shortcodes, ['card', 'cards']);
         $sliders = self::load(Slider::class, $shortcodes, ['slider']);
         $forms = self::load(Form::class, $shortcodes, ['form']);
+        $socialLinkSets = self::load(SocialLinkSet::class, $shortcodes, ['social']);
         $images = self::loadImages($shortcodes);
         $files = self::loadFiles($shortcodes);
 
-        return preg_replace_callback(self::PLACEHOLDER_PATTERN, function (array $match) use ($shortcodes, $modules, $cards, $sliders, $forms, $images, $files): string {
+        return preg_replace_callback(self::PLACEHOLDER_PATTERN, function (array $match) use ($shortcodes, $modules, $cards, $sliders, $forms, $socialLinkSets, $images, $files): string {
             $shortcode = $shortcodes[(int) $match[1]] ?? null;
 
             if ($shortcode === null) {
@@ -154,13 +164,14 @@ class Markdown
                 'cards' => self::cardGrid(self::slugs($shortcode['value']), $cards),
                 'slider' => $sliders->get(self::slugs($shortcode['value'])[0] ?? '')?->html(),
                 'form' => $forms->get(self::slugs($shortcode['value'])[0] ?? '')?->html(),
+                'social' => $socialLinkSets->get(self::slugs($shortcode['value'])[0] ?? '')?->html($shortcode['align'] ?? null),
             };
 
             if ($html !== null) {
                 return $html;
             }
 
-            return in_array($shortcode['kind'], ['image', 'file'], true) ? e($shortcode['original']) : '<p>'.e($shortcode['original']).'</p>';
+            return in_array($shortcode['kind'], ['image', 'file', 'social'], true) ? e($shortcode['original']) : '<p>'.e($shortcode['original']).'</p>';
         }, $html);
     }
 
@@ -203,7 +214,7 @@ class Markdown
     /**
      * Load, in one query, every module or card the shortcodes of the given kinds name.
      *
-     * @template TModel of Module|Card|Slider|Form
+     * @template TModel of Module|Card|Slider|Form|SocialLinkSet
      *
      * @param  class-string<TModel>  $model
      * @param  list<array{kind: string, value: string, original: string}>  $shortcodes
@@ -326,6 +337,23 @@ class Markdown
         return preg_replace_callback('#(\s(?:href|src)=")(/(?!/)[^"]*)#i', fn (array $match): string => str_starts_with($match[2].'/', $folder.'/')
             ? $match[0]
             : $match[1].$folder.$match[2], $html);
+    }
+
+    /**
+     * The parts of [social:slug|align]: the set's slug, and left, center or
+     * right to give the row a line of its own.
+     *
+     * @return array{value: string, align: ?string}
+     */
+    public static function socialOptions(string $value): array
+    {
+        $parts = array_map(trim(...), explode('|', $value));
+        $alignment = strtolower($parts[1] ?? '');
+
+        return [
+            'value' => $parts[0],
+            'align' => self::isImageAlignment($alignment) ? $alignment : null,
+        ];
     }
 
     /**

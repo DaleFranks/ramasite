@@ -5,10 +5,11 @@ namespace App\Models;
 use App\BoxStyle;
 use App\FooterStyle;
 use App\LogoPosition;
+use App\Markdown;
 use App\SiteNamePosition;
-use App\TextAlignment;
 use App\ThemeFonts;
 use App\ThemeOptions;
+use App\TopBarAlignment;
 use Carbon\CarbonInterface;
 use Closure;
 use Database\Factories\ThemeFactory;
@@ -99,7 +100,7 @@ class Theme extends Model
             'site_name_position' => SiteNamePosition::class,
             'sticky_header' => 'boolean',
             'top_bar_style' => BoxStyle::class,
-            'top_bar_alignment' => TextAlignment::class,
+            'top_bar_alignment' => TopBarAlignment::class,
             'top_bar_stays_visible' => 'boolean',
             'logo_position' => LogoPosition::class,
             'footer_style' => FooterStyle::class,
@@ -255,12 +256,46 @@ class Theme extends Model
 
     /**
      * The top bar's text as HTML. It may use Markdown for bold text and links,
-     * such as [(760) 555-0100](tel:+17605550100) to call from a phone. Like page
-     * content, it can't hold links that run code (javascript: and the like).
+     * such as [(760) 555-0100](tel:+17605550100) to call from a phone, and
+     * [social:slug] for a set of social links. Like page content, it can't hold
+     * links that run code (javascript: and the like).
+     *
+     * With the Spread alignment, the social links are moved to the right of
+     * the bar and the text stays at the left.
      */
     public function topBarHtml(): HtmlString
     {
-        return new HtmlString(Str::inlineMarkdown((string) $this->top_bar_text, ['allow_unsafe_links' => false]));
+        /** @var list<string> $shortcodes */
+        $shortcodes = [];
+
+        $text = preg_replace_callback('/\[social:([^\]]+)\]/i', function (array $match) use (&$shortcodes): string {
+            $shortcodes[] = $match[0];
+
+            return "\u{E000}".array_key_last($shortcodes)."\u{E001}";
+        }, (string) $this->top_bar_text);
+
+        $html = trim(Str::inlineMarkdown($text, ['allow_unsafe_links' => false]));
+
+        if ($shortcodes === []) {
+            return new HtmlString($html);
+        }
+
+        $slugOf = fn (string $shortcode): string => Markdown::slugs(Markdown::socialOptions(substr($shortcode, 8, -1))['value'])[0] ?? '';
+        $sets = SocialLinkSet::query()->whereIn('slug', array_map($slugOf, $shortcodes))->get()->keyBy('slug');
+        $socialHtml = fn (array $match): string => $sets->get($slugOf($shortcodes[(int) $match[1]]))?->html() ?? e($shortcodes[(int) $match[1]]);
+
+        if ($this->top_bar_alignment !== TopBarAlignment::Spread) {
+            return new HtmlString(preg_replace_callback('/\x{E000}(\d+)\x{E001}/u', $socialHtml, $html));
+        }
+
+        $social = [];
+        $html = trim(preg_replace_callback('/\x{E000}(\d+)\x{E001}/u', function (array $match) use (&$social, $socialHtml): string {
+            $social[] = $socialHtml($match);
+
+            return '';
+        }, $html));
+
+        return new HtmlString('<span class="top-bar-text">'.$html.'</span><span class="top-bar-social">'.implode('', $social).'</span>');
     }
 
     /**

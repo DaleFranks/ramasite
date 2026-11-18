@@ -6,12 +6,14 @@ use App\Markdown;
 use App\Models\Card;
 use App\Models\Entry;
 use App\Models\Module;
+use App\Models\Theme;
 use Closure;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 
 /**
  * For things content places by their slug with a shortcode (modules, cards,
- * sliders and forms): finding where they're placed, so one in use is never
+ * sliders, forms and social links): finding where they're placed, so one in use is never
  * deleted or renamed, which would leave the shortcode showing as written.
  */
 trait PlacedByShortcode
@@ -25,9 +27,17 @@ trait PlacedByShortcode
 
     /**
      * Whether modules and cards can place it as well as pages and posts. Only
-     * forms can; modules, cards and sliders go in pages and posts.
+     * forms and social links can; modules, cards and sliders go in pages and posts.
      */
     protected static function isPlacedInModulesAndCards(): bool
+    {
+        return false;
+    }
+
+    /**
+     * Whether the Theme screen's top bar can place it. Only social links can.
+     */
+    protected static function isPlacedInTopBar(): bool
     {
         return false;
     }
@@ -42,7 +52,8 @@ trait PlacedByShortcode
     }
 
     /**
-     * Where content places it, by name, e.g. "Page: About us".
+     * Where content places it, by name, e.g. "Page: About us". Anything after
+     * a "|" in the shortcode, such as an alignment, isn't part of the slug.
      *
      * @return Collection<int, string>
      */
@@ -51,7 +62,7 @@ trait PlacedByShortcode
         $slug = strtolower((string) $this->getRawOriginal('slug'));
         $pattern = '/\[(?:'.implode('|', static::placingShortcodes()).'):([^\]]+)\]/i';
         $places = fn (?string $body): bool => preg_match_all($pattern, (string) $body, $matches) > 0
-            && collect($matches[1])->contains(fn (string $value): bool => in_array($slug, Markdown::slugs($value), true));
+            && collect($matches[1])->contains(fn (string $value): bool => in_array($slug, Markdown::slugs(Str::before($value, '|')), true));
         $containing = fn (string $model) => $model::query()->where('body', 'like', '%'.$slug.'%');
 
         $usages = $containing(Entry::class)->get(['id', 'type', 'title', 'body'])
@@ -65,6 +76,10 @@ trait PlacedByShortcode
                     ->map(fn (Module $module): string => 'Module: '.$module->name))
                 ->merge($containing(Card::class)->get(['id', 'name', 'body'])->filter(fn (Card $card): bool => $places($card->body))
                     ->map(fn (Card $card): string => 'Card: '.$card->name));
+        }
+
+        if (static::isPlacedInTopBar() && $places(Theme::current()->top_bar_text)) {
+            $usages->push('Theme: top bar');
         }
 
         return $usages->values();

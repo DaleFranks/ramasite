@@ -330,6 +330,27 @@ body.top-bar-scrolls-away .site-header.scrolled {
     text-align: right;
 }
 
+/* Spread: the text at the left and any social links at the right, also on phones */
+.top-bar.align-spread .top-bar-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+}
+
+.top-bar.align-spread .top-bar-text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.top-bar.align-spread .top-bar-social {
+    display: flex;
+    flex: none;
+    gap: 1em;
+    margin-left: auto;
+}
+
 .top-bar a {
     color: inherit;
     font-weight: 600;
@@ -880,6 +901,80 @@ body.nav-collapsed .dropdown-arrow {
     font-size: 0.9em;
     opacity: 0.75;
     white-space: nowrap;
+}
+
+/* Social links, [social:slug]: a row of square logos that never wraps. In the
+   line with text unless given an alignment, which puts the row on a line of
+   its own. Each logo fills its square, which is the link. */
+.social-links {
+    --social-color: var(--color-link, var(--color-primary));
+    display: inline-flex;
+    align-items: center;
+    gap: calc(var(--social-size, 32px) * 0.375);
+    flex-wrap: nowrap;
+    vertical-align: middle;
+    line-height: 0;
+}
+
+.social-links.social-dark {
+    --social-color: #1a1a1a;
+}
+
+.social-links.social-light {
+    --social-color: #ffffff;
+}
+
+.social-links.align-left,
+.social-links.align-center,
+.social-links.align-right {
+    display: flex;
+}
+
+.social-links.align-center {
+    justify-content: center;
+}
+
+.social-links.align-right {
+    justify-content: flex-end;
+}
+
+.social-links a.social-link,
+.social-links a.social-link:hover {
+    display: block;
+    flex: none;
+    width: var(--social-size, 32px);
+    height: var(--social-size, 32px);
+    color: var(--social-color);
+    border: 0;
+    text-decoration: none;
+}
+
+.social-links a.social-link {
+    transition: opacity var(--transition-fast);
+}
+
+.social-links a.social-link:hover {
+    opacity: 0.75;
+}
+
+.social-links .social-link svg,
+.social-links .social-link img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    border-radius: 0;
+    object-fit: contain;
+}
+
+/* In the top bar, logos are kept small enough to fit the bar */
+.top-bar .social-links a.social-link {
+    width: min(var(--social-size, 32px), 1.6em);
+    height: min(var(--social-size, 32px), 1.6em);
+}
+
+.top-bar .social-links {
+    gap: min(calc(var(--social-size, 32px) * 0.375), 0.6em);
 }
 
 /* Clearfix for floated images */

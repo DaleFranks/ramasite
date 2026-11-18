@@ -86,6 +86,15 @@ Embeds a video. Optional: a width (`640` or `80%`) and an alignment (`left`, `ce
 
 Places a form made on the [Forms](forms.md) screen. Works in pages, posts, cards and modules.
 
+### Social links
+
+```
+Follow us: [social:main]
+[social:main|center]
+```
+
+Places a set of logos made on the [Social links](social-links.md) screen. Without an alignment, the logos sit in the line with the text around them; `|left`, `|center` or `|right` puts them on a line of their own. Works in pages, posts, cards, modules, the footer and the top bar.
+
 ### Cards, modules and sliders (pages and posts only)
 
 ```

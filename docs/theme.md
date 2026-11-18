@@ -27,8 +27,8 @@ If the settings have changed since you opened the screen, in another browser tab
 **Header**
 - **Layout**: logo on the left with the menu beside it, or centered with the menu below; whether the header stays visible while scrolling; and the **site name** beside the logo, below it, or not shown (logo only). The site name can also hide once the visitor scrolls down.
 - **Top bar**: an optional line of text in a thin bar above the logo and menu, such as a phone number. It never takes room from the menu.
-  - **Text**: one line. Markdown works, so `[(760) 555-0100](tel:+17605550100)` is a number visitors can tap to call. Leave it empty for no bar.
-  - **Style** (Dark, Light or Primary color), **Alignment**, **Font** and **Text size**. The bar grows to fit the text size.
+  - **Text**: one line. Markdown works, so `[(760) 555-0100](tel:+17605550100)` is a number visitors can tap to call, and `[social:slug]` places a set of [social links](social-links.md). Leave it empty for no bar.
+  - **Style** (Dark, Light or Primary color), **Alignment**, **Font** and **Text size**. The bar grows to fit the text size. The **Spread** alignment puts the text at the left and any social links at the right.
   - **Keep the top bar visible when scrolled**: when off, the bar folds away as the header shrinks, and comes back at the top of the page.
 - **Header bar**: background color, menu link colors, the header's height at the top of the page and once scrolled, and an optional background image.
 - **Menu on phones**: the colors of the menu that opens from the menu button.

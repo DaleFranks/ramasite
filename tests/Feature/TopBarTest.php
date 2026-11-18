@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\ThemeSettings;
 use App\Models\Entry;
+use App\Models\SocialLinkSet;
 use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -142,5 +143,49 @@ class TopBarTest extends TestCase
         $theme = Theme::current();
         $this->assertSame('Call us', $theme->top_bar_text);
         $this->assertSame('dark', $theme->top_bar_style->value);
+    }
+
+    public function test_social_links_sit_in_the_line_with_the_top_bar_text(): void
+    {
+        SocialLinkSet::factory()->create(['slug' => 'main']);
+        Theme::current()->update(['top_bar_text' => '**Call** us [social:main] today']);
+
+        $this->get('/about')
+            ->assertOk()
+            ->assertSee('<div class="top-bar-container"><strong>Call</strong> us <span class="social-links social-dark"', false)
+            ->assertSee('aria-label="Facebook"', false)
+            ->assertDontSee('top-bar-social', false);
+    }
+
+    public function test_spread_is_saved_from_the_theme_screen(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        Livewire::test(ThemeSettings::class)
+            ->fillForm(['top_bar_text' => 'Hello', 'top_bar_alignment' => 'spread'])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertSame('spread', Theme::current()->top_bar_alignment->value);
+    }
+
+    public function test_spread_puts_the_text_at_the_left_and_the_social_links_at_the_right(): void
+    {
+        SocialLinkSet::factory()->create(['slug' => 'main']);
+        Theme::current()->update(['top_bar_text' => '[social:main] Call [(760) 555-0100](tel:+17605550100)', 'top_bar_alignment' => 'spread']);
+
+        $this->get('/about')
+            ->assertOk()
+            ->assertSee('<div class="top-bar theme-dark align-spread">', false)
+            ->assertSee('<div class="top-bar-container"><span class="top-bar-text">Call <a href="tel:+17605550100">(760) 555-0100</a></span><span class="top-bar-social"><span class="social-links social-dark"', false);
+    }
+
+    public function test_a_top_bar_shortcode_naming_no_set_is_shown_as_written(): void
+    {
+        Theme::current()->update(['top_bar_text' => 'Hello [social:missing]']);
+
+        $this->get('/about')
+            ->assertOk()
+            ->assertSee('<div class="top-bar-container">Hello [social:missing]</div>', false);
     }
 }

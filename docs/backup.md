@@ -8,7 +8,7 @@ The Backup screen downloads everything that makes the site its own as one zip fi
 
 | In the zip | What it is |
 |---|---|
-| `database/database.sqlite` | Everything entered in the admin: pages, posts, cards, modules, sliders, forms and their submissions, redirects, Theme and Email settings, and the admin accounts |
+| `database/database.sqlite` | Everything entered in the admin: pages, posts, cards, modules, sliders, forms and their submissions, social links, redirects, Theme and Email settings, and the admin accounts |
 | `public/uploads/` | The image and file libraries, logo and browser tab icon |
 | `.env` | The site's settings file. Its key unlocks the saved SMTP password and everyone's two-step login. |
 | `storage/app/database-version` | Which database updates the copy has |

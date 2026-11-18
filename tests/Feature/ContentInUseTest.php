@@ -6,11 +6,14 @@ use App\Filament\Resources\Cards\Pages\EditCard;
 use App\Filament\Resources\Cards\Pages\ListCards;
 use App\Filament\Resources\Forms\Pages\EditForm;
 use App\Filament\Resources\Modules\Pages\EditModule;
+use App\Filament\Resources\SocialLinkSets\Pages\EditSocialLinkSet;
 use App\Models\Card;
 use App\Models\Entry;
 use App\Models\Form;
 use App\Models\Module;
 use App\Models\Slider;
+use App\Models\SocialLinkSet;
+use App\Models\Theme;
 use App\Models\User;
 use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -18,7 +21,7 @@ use Livewire\Livewire;
 use Tests\TestCase;
 
 /**
- * Modules, cards, sliders and forms can't be deleted or renamed while content
+ * Modules, cards, sliders, forms and social links can't be deleted or renamed while content
  * places them, or that content would show the shortcode as written.
  */
 class ContentInUseTest extends TestCase
@@ -45,6 +48,39 @@ class ContentInUseTest extends TestCase
 
         $this->assertSame(['Module: Footer box'], $form->usages()->all());
         $this->assertSame([], $slider->usages()->all());
+    }
+
+    public function test_social_links_count_as_used_in_content_and_the_top_bar_whatever_their_alignment(): void
+    {
+        $social = SocialLinkSet::factory()->create(['slug' => 'main']);
+        Entry::factory()->create(['title' => 'Home', 'body' => '[social:main|center]']);
+        Module::factory()->create(['name' => 'Banner', 'body' => 'Follow us [social:main]']);
+        Card::factory()->create(['name' => 'Contact', 'body' => '[social: MAIN | right]']);
+        Theme::current()->update(['top_bar_text' => 'Call us [social:main]']);
+
+        $this->assertEqualsCanonicalizing(
+            ['Page: Home', 'Module: Banner', 'Card: Contact', 'Theme: top bar'],
+            $social->usages()->all(),
+        );
+    }
+
+    public function test_social_links_in_the_top_bar_cannot_be_deleted_or_renamed(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $social = SocialLinkSet::factory()->create(['name' => 'Main', 'slug' => 'main']);
+        Theme::current()->update(['top_bar_text' => '[social:main]']);
+
+        Livewire::test(EditSocialLinkSet::class, ['record' => $social->getRouteKey()])
+            ->fillForm(['slug' => 'other'])
+            ->call('save')
+            ->assertHasFormErrors(['slug']);
+
+        Livewire::test(EditSocialLinkSet::class, ['record' => $social->getRouteKey()])
+            ->callAction(DeleteAction::class)
+            ->assertNotified('Main is in use and can\'t be deleted');
+
+        $this->assertModelExists($social);
+        $this->assertSame('main', $social->refresh()->slug);
     }
 
     public function test_one_in_use_cannot_be_deleted_and_an_unused_one_can(): void
