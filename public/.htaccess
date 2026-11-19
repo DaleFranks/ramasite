@@ -32,3 +32,21 @@
 <IfModule mod_headers.c>
     Header set X-Content-Type-Options "nosniff"
 </IfModule>
+
+# Stylesheets, scripts and SVGs are sent compressed, at about a fifth of their
+# size. Pages aren't: they hold a security token, which compressing could
+# expose (the "BREACH" attack)
+<IfModule mod_filter.c>
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/css text/javascript application/javascript image/svg+xml
+    </IfModule>
+</IfModule>
+
+# Browsers keep stylesheets, scripts and fonts for a year instead of fetching
+# them again on each visit. The site's own addresses for them carry a version
+# (?v=...), so after an upgrade the new copies are fetched
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2)$">
+        Header set Cache-Control "public, max-age=31536000"
+    </FilesMatch>
+</IfModule>
