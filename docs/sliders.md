@@ -2,7 +2,7 @@
 
 A slider shows a series of images one at a time, with arrows to move between them. Place one in a page with `[slider:slug]`.
 
-![The slider editor, with the name, slug, animation and timing, and an image and caption for each slide](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/slider-editor.png)
+![The slider editor, with the name, slug, animation, timing, arrow style and arrow color](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/slider-editor.png)
 
 - **Name** and **Slug**: the slug is used in the shortcode. While a page or post places the slider, it can't be deleted and its slug can't change; the message says where it's used, so those can be changed first.
 - **Animation**: **Slide** (images move sideways) or **Fade** (each image fades into the next).
@@ -17,5 +17,7 @@ A slider shows a series of images one at a time, with arrows to move between the
   - **Text position**: a banner at the bottom (the starting choice) or top, or a box about 40% wide at the left or right, centered vertically. On phones, a box at the side becomes a banner at the bottom.
   - **Text color** and **Background color**: leave them empty for white text on black at 65%.
   - The image's alt text in the library is used for screen readers.
+
+![A slider's slides, each with an image, caption, slow zoom, text position and colors](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/slider-slides.png)
 
 An image used in a slider can't be deleted from the library until it's removed from the slider. The site-wide arrow colors and animation speed can be adjusted on the Theme screen's **Slider** tab.

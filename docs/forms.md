@@ -18,7 +18,9 @@ Forms are built here and placed in a page, post, card or module with `[form:slug
 
 File uploads aren't offered.
 
-![The form editor, with the name, slug, button wording, thank-you message, addresses to email and the fields](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/form-editor.png)
+![The form editor, with the name, slug, button wording, thank-you message and addresses to email](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/form-editor.png)
+
+![The form editor's fields, each with a label, type, help text and Required switch, and a handle for dragging it into order](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/form-editor-fields.png)
 
 ## Submissions
 

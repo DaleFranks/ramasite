@@ -15,9 +15,13 @@ A card is a small box, such as a service, a price plan or a call to action. Card
 - **Featured**: highlights the card with a colored border and a "Featured" ribbon.
 - **Content**: Markdown. Images, videos and forms can be used inside a card.
 
+![The card editor, with the name, slug, style, text alignment and Featured switch](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/card-editor.png)
+
 ## Modules
 
 A module is a larger section, such as a call-to-action band or a contact section. Place one in a page with `[module:slug]`. On a page with the **Landing** layout, modules stretch across the whole window as bands.
+
+![The Modules screen, listing each module with its shortcode and style, and the footer](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/modules.png)
 
 Modules have a name, slug, style and content, like cards. They also have:
 
@@ -36,3 +40,5 @@ It can use these shortcodes:
 - `[navigation:multi]`: a column for each page in the menu, with its sub-pages under it
 - `[curr-year]`: the current year
 - `[site-name]`: the site name
+
+![The footer's editor, with a menu, a phone number and the copyright year in its content, and the shortcodes it can use listed below](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/footer-editor.png)

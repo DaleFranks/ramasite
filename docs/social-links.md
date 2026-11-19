@@ -4,6 +4,8 @@ A set of social links is a row of logos, each linking to one of your profiles, s
 
 ## Building a set
 
+![The social links editor, with the name, slug, logo colors, logo size and the new tab switch](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/social-links-editor.png)
+
 - **Name** and **Slug**: the slug is used in the shortcode. While a page, post, card, module, the footer or the top bar places the set, it can't be deleted and its slug can't change; the message says where it's used, so those can be changed first.
 - **Logo colors**:
   - **Brand colors**: each logo in its brand's own color, such as Facebook's blue. Email and Website have no brand, so they use the theme's link color. Some brands' color is black (X, Threads, TikTok, GitHub, Medium and Patreon), and Snapchat's yellow is hard to see on white, so on some backgrounds another choice looks better.
@@ -13,6 +15,8 @@ A set of social links is a row of logos, each linking to one of your profiles, s
 - **Logo size**: each logo is a square this many pixels wide, from 24 to 128. In the top bar the logos are kept small enough to fit the bar.
 - **Open links in a new tab**: on by default. Email links always open the visitor's email program instead.
 - **Links**: add one line for each profile, and drag them into order. Each has a **service**, which sets its logo, and the **link** to your profile, starting with `https://`. For **Email**, enter just the email address; it becomes a link that starts an email to you.
+
+![A set's links, each with a service and the link to the profile](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/social-links-links.png)
 
 Screen readers announce each logo by its service's name, such as "Facebook".
 

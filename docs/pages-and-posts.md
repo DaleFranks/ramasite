@@ -8,7 +8,7 @@ Everything with its own address on the site is listed here. There are three type
 
 ## Writing a page or post
 
-![The page editor, with the title, slug and content on the left, and the Publishing and Layout settings on the right](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/page-editor.png)
+![The page editor, with the title, slug and content on the left, and the Publishing settings on the right](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/page-editor.png)
 
 - **Title**: shown at the top of the page and in the browser tab.
 - **Slug**: the page's address. It's filled in from the title as you type, and numbered if that address is taken (`about-2`). Pages and blogs can use slashes to sit "under" another address, such as `services/design`. A post's slug is just its own part.

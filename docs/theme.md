@@ -8,10 +8,6 @@ Most settings start **empty, meaning automatic**: their value is worked out from
 
 If the settings have changed since you opened the screen, in another browser tab or by another admin, **Save** stops and asks what to do. **Load the latest settings** discards what you've changed on this screen. **Save my version anyway** replaces everything with what's on this screen.
 
-![The Fonts tab, with a live sample under each font](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/fonts.png)
-
-![The Colors tab, where empty settings show the automatic value in grey](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/colors.png)
-
 ## Tabs
 
 **Branding**
@@ -20,9 +16,13 @@ If the settings have changed since you opened the screen, in another browser tab
 - **Logo** and **Browser tab icon** (a small square image).
 - Logo height, maximum width, and whether it tilts slightly when pointed at.
 
+![The Branding tab, with the site name, timezone, logo and browser tab icon](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/theme-branding.png)
+
 **Colors**
 - The four main colors: **Primary** (links, buttons, the current menu item), **Secondary** (headings, the site name, the dark footer), **Text** and **Page background**.
 - Detailed colors for hover states, muted text, links, borders and code.
+
+![The Colors tab, where empty settings show the automatic value in grey](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/colors.png)
 
 **Header**
 - **Layout**: logo on the left with the menu beside it, or centered with the menu below; whether the header stays visible while scrolling; and the **site name** beside the logo, below it, or not shown (logo only). The site name can also hide once the visitor scrolls down.
@@ -33,12 +33,16 @@ If the settings have changed since you opened the screen, in another browser tab
 - **Header bar**: background color, menu link colors, the header's height at the top of the page and once scrolled, and an optional background image.
 - **Menu on phones**: the colors of the menu that opens from the menu button.
 
+![The Header tab, with the logo position, where the site name goes, and the switches for keeping the header visible](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/theme-header.png)
+
 **Fonts**
 - The body and heading fonts, plus fonts for quotes, large display headings and code, chosen from a list of Google Fonts grouped by type. Type in a list to search it. A sample of the chosen font appears beneath each list. Display and handwriting fonts aren't offered for body text. Fonts load from Google; a site doesn't keep font files of its own.
 - **Text size** for body text.
 - **Text alignment**: **Left** or **Justified**, for paragraphs, lists and quotes in pages and posts. Justified text goes back to left on phones and small tablets. Headings are always left-aligned, and tables, cards and modules aren't affected.
 - **Line height**: the space between lines of text in pages and posts, as a multiple of the text size. It starts at 1.6, and clearing the box puts 1.6 back. Anything inside a page's content follows it unless it has spacing of its own, such as headings. The site's header, menu and footer don't.
 - **Headings**: the font, size, weight, color and line height of Heading 1 and page titles, which every other heading level follows by default. Heading 2 to Heading 6 can each have their own font, size, weight and color, and line height is shared by all of them. A font without the chosen weight uses its closest one. Headings in Dark, Light and Primary color panels and in cards keep their own look. Until a Heading 1 size or line height is chosen, page titles stay at 40 px and 1.15.
+
+![The Fonts tab, with a live sample under each font](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/fonts.png)
 
 **Cards**: card title and text colors and sizes.
 

@@ -2,6 +2,8 @@
 
 The site sends email for form submissions, password reset links and two-step login codes. It works without any setting up: by default it uses the web server's own mail sending. An SMTP server is only needed if email isn't getting through, or is landing in spam.
 
+![The Email screen, with the From address and name, and the switch to send through an SMTP server](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/email.png)
+
 ## Sender
 
 - **From address**: who email comes from. Use an address at your site's domain. Left empty, it's `noreply@` your domain.

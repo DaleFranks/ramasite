@@ -9,6 +9,8 @@ Everyone who can log in to the admin is listed on the **Users** screen. Every ac
 - **Delete**: removes someone's access. Pages they wrote are kept. You can't delete your own account, so the site always has at least one admin.
 - **Two-step login** shows who has it turned on. **Turn off two-step login** is for someone who has lost their phone or can't get the emailed codes; they can turn it back on from their profile.
 
+![The Users screen, listing each admin with whether two-step login is on, and the button to turn it off](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/users.png)
+
 ## Your profile
 
 Click your initial in the top-right corner and choose **Profile** to change your name, email address or password. A new password is only saved if you also enter your current one.

@@ -10,6 +10,8 @@ A redirect sends visitors (and search engines) from an address that no longer ha
 - **To**: where visitors go instead: an address on this site starting with `/`, such as `/services`, or a full web address.
 - **Type**: **Permanent (301)** when the old address has moved for good, which tells search engines to move its ranking to the new address. **Temporary (302)** if it may come back.
 
+![The redirect editor, with the old address, the new one and the type](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/redirect-editor.png)
+
 Capital letters don't matter: `/About_Us.aspx` and `/about_us.aspx` are the same.
 
 ## How they work
