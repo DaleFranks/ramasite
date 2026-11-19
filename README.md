@@ -26,6 +26,8 @@ What it does:
 
 ![The Theme screen's Fonts tab, with a live sample under each font](https://raw.githubusercontent.com/DaleFranks/ramasite/main/docs/screenshots/fonts.png)
 
+For a tour of every admin screen, with screenshots, see [RamaSite Administration](https://webmasterdeveloper.com/articles/ramasite-administration).
+
 ## Requirements
 
 - PHP **8.4.1 or newer**, with these extensions (most hosts have them all): `pdo_sqlite`, `mbstring`, `intl`, `openssl`, `fileinfo`, `tokenizer`, `ctype`, `dom`, `xmlreader`, `filter` and `session`. The `zip` extension is also needed for the Backup screen.
