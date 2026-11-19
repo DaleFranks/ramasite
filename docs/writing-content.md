@@ -14,6 +14,8 @@ Pages, posts, cards and modules are written in **Markdown**, a simple way of for
 | `> quoted text` | A quotation |
 | A blank line | A new paragraph |
 
+To open a link in a new tab, add `{target=_blank}` straight after it: `[our shop](https://example.com){target=_blank}`. The same curly brackets can give a link a class to style in Custom CSS, such as `{.highlight}`, or give a paragraph or heading one when written on the line below it.
+
 HTML can also be used where Markdown isn't enough.
 
 A page's title is already shown above its content, so if the content starts with a `# Heading` line, that line is left out.

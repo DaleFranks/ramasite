@@ -12,6 +12,7 @@ use App\Models\Slider;
 use App\Models\SocialLinkSet;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use League\CommonMark\Extension\Attributes\AttributesExtension;
 
 /**
  * Turns Markdown into HTML, filling in shortcodes:
@@ -25,6 +26,10 @@ use Illuminate\Support\Str;
  *
  * Ordinary Markdown images, ![description](team.jpg), also find their file in
  * the library.
+ *
+ * Attributes in curly brackets after a link, image or line add to its HTML
+ * (CommonMark's Attributes extension), so [text](url){target=_blank} opens
+ * a link in a new tab.
  *
  * Each shortcode is swapped for a placeholder before the Markdown is converted
  * and filled in afterwards, so its HTML is never converted twice. Videos,
@@ -132,7 +137,7 @@ class Markdown
         $html = self::inSiteFolder(Str::markdown($markdown, [
             'html_input' => 'allow',
             'allow_unsafe_links' => false,
-        ]));
+        ], [new AttributesExtension]));
 
         if ($shortcodes === []) {
             return $html;

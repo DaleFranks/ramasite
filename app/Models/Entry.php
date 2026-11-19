@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use League\CommonMark\Extension\Attributes\AttributesExtension;
 
 /**
  * A page, blog or blog post, written in Markdown.
@@ -274,7 +275,7 @@ class Entry extends Model
             '/\[(module|card|cards|youtube|image|slider|form):[^\]]*\]/i',
         ], '', $markdown);
 
-        $text = trim(html_entity_decode(strip_tags(Str::markdown($markdown)), ENT_QUOTES, 'UTF-8'));
+        $text = trim(html_entity_decode(strip_tags(Str::markdown($markdown, extensions: [new AttributesExtension])), ENT_QUOTES, 'UTF-8'));
         $sentences = preg_split('/(?<=[.?!])\s+/u', $text) ?: [];
 
         return implode(' ', array_slice($sentences, 0, 3));
