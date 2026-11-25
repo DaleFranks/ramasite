@@ -254,31 +254,86 @@ class Entry extends Model
     {
         $markdown = preg_replace('/^\s*#\s+.+?(\r?\n)+/', '', (string) $this->body, 1);
 
-        return Markdown::toHtml($markdown, withBlocks: true);
+        return self::withFirstImageLoadingAtOnce(Markdown::toHtml($markdown, withBlocks: true));
     }
 
     /**
+     * The first picture in the content is often the first thing visitors see,
+     * so it isn't left for the browser to fetch late, as the rest are.
+     */
+    private static function withFirstImageLoadingAtOnce(string $html): string
+    {
+        return (string) preg_replace_callback(
+            '/<img\b[^>]*>/i',
+            fn (array $image): string => str_replace(' loading="lazy"', '', $image[0]),
+            $html,
+            1,
+        );
+    }
+
+    /**
+     * How much of the body is read for an excerpt at first, then next, in
+     * characters, before falling back to all of it.
+     *
+     * @var list<int>
+     */
+    private const EXCERPT_READ_LENGTHS = [1500, 6000];
+
+    /**
      * The first three sentences of the body as plain text, for blog feeds.
+     *
+     * Only the start of the body is converted when it's enough, as converting a
+     * long post whole takes most of a blog page's time. The start ends at a
+     * paragraph break, and counts only if it holds a fourth sentence, so its
+     * first three are whole and the excerpt is the same as from the full body.
+     * Reference links ([text][name]) can be defined anywhere, so a body with
+     * any is always read whole.
      */
     public function excerpt(): string
+    {
+        $body = (string) $this->body;
+
+        if (! preg_match('/^ {0,3}\[[^\]]+\]:/m', $body)) {
+            foreach (self::EXCERPT_READ_LENGTHS as $length) {
+                if (! preg_match('/\n[ \t]*\r?\n/', $body, $paragraphBreak, PREG_OFFSET_CAPTURE, min($length, strlen($body)))) {
+                    break;
+                }
+
+                $sentences = self::sentencesIn(substr($body, 0, $paragraphBreak[0][1]));
+
+                if (count($sentences) > 3) {
+                    return implode(' ', array_slice($sentences, 0, 3));
+                }
+            }
+        }
+
+        return implode(' ', array_slice(self::sentencesIn($body), 0, 3));
+    }
+
+    /**
+     * Some Markdown as plain text, split into sentences: without headings,
+     * images or shortcodes, and with each file link as its text.
+     *
+     * @return list<string>
+     */
+    private static function sentencesIn(string $markdown): array
     {
         // A file link reads as its text, e.g. "Download our menu", so the sentence stays whole
         $markdown = preg_replace_callback('/\[file:([^\]]+)\]/i', function (array $match): string {
             $options = Markdown::fileOptions($match[1]);
 
             return $options['text'] ?? $options['file'];
-        }, (string) $this->body);
+        }, $markdown);
 
         $markdown = preg_replace([
             '/!\[.*?\]\(.*?\)/',
             '/^#+\s+.*$/m',
-            '/\[(module|card|cards|youtube|image|slider|form):[^\]]*\]/i',
+            '/\[(module|card|cards|youtube|image|slider|form|social):[^\]]*\]/i',
         ], '', $markdown);
 
         $text = trim(html_entity_decode(strip_tags(Str::markdown($markdown, extensions: [new AttributesExtension])), ENT_QUOTES, 'UTF-8'));
-        $sentences = preg_split('/(?<=[.?!])\s+/u', $text) ?: [];
 
-        return implode(' ', array_slice($sentences, 0, 3));
+        return $text === '' ? [] : (preg_split('/(?<=[.?!])\s+/u', $text) ?: []);
     }
 
     /**

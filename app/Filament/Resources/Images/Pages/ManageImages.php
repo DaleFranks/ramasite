@@ -9,7 +9,6 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Support\Icons\Heroicon;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use RuntimeException;
 
 class ManageImages extends ManageRecords
@@ -60,14 +59,17 @@ class ManageImages extends ManageRecords
                         ->helperText('Drop one or more images here. A file whose name is already taken is saved with a number added, so nothing is replaced.'),
                 ])
                 ->action(function (Action $action, array $data): void {
+                    $images = collect();
+
                     try {
-                        $images = collect($data['files'])
-                            ->map(fn (TemporaryUploadedFile $file): Image => Image::storeUpload($file));
+                        foreach ($data['files'] as $file) {
+                            $images->push(Image::storeUpload($file));
+                        }
                     } catch (RuntimeException $exception) {
                         Notification::make()
                             ->danger()
                             ->title('Not every image was uploaded')
-                            ->body($exception->getMessage())
+                            ->body(ImageResource::uploadStoppedMessage($exception->getMessage(), $images->pluck('filename')->all()))
                             ->persistent()
                             ->send();
 

@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\LibraryFiles\Pages;
 
+use App\Filament\Resources\Images\ImageResource;
 use App\Filament\Resources\LibraryFiles\LibraryFileResource;
 use App\Models\LibraryFile;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ManageRecords;
 use Filament\Support\Icons\Heroicon;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use RuntimeException;
 
 class ManageLibraryFiles extends ManageRecords
@@ -29,14 +29,17 @@ class ManageLibraryFiles extends ManageRecords
                         ->helperText('Drop one or more files here: '.LibraryFile::typeList().'. A file whose name is already taken is saved with a number added, so nothing is replaced.'),
                 ])
                 ->action(function (Action $action, array $data): void {
+                    $files = collect();
+
                     try {
-                        $files = collect($data['files'])
-                            ->map(fn (TemporaryUploadedFile $file): LibraryFile => LibraryFile::storeUpload($file));
+                        foreach ($data['files'] as $file) {
+                            $files->push(LibraryFile::storeUpload($file));
+                        }
                     } catch (RuntimeException $exception) {
                         Notification::make()
                             ->danger()
                             ->title('Not every file was uploaded')
-                            ->body($exception->getMessage())
+                            ->body(ImageResource::uploadStoppedMessage($exception->getMessage(), $files->pluck('filename')->all()))
                             ->persistent()
                             ->send();
 

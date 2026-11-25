@@ -180,6 +180,21 @@ class ImageResource extends Resource
             ->send();
     }
 
+    /**
+     * What an upload of several files that stopped partway says: why, and which
+     * files went in before it stopped, as the popup still lists them all.
+     *
+     * @param  list<string>  $addedFilenames
+     */
+    public static function uploadStoppedMessage(string $problem, array $addedFilenames): string
+    {
+        if ($addedFilenames === []) {
+            return $problem;
+        }
+
+        return $problem.' These were added before it stopped: '.implode(', ', $addedFilenames).'. Take them out of the list before uploading again, or they\'ll be added a second time.';
+    }
+
     private static function whereUsedText(Image $image): string
     {
         $usages = $image->usages();

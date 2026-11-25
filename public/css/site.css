@@ -532,14 +532,16 @@ body.top-bar-scrolls-away .site-header.scrolled {
     font-weight: 600;
 }
 
-/* Hover drop-downs, while the full menu is showing */
-body:not(.nav-collapsed) .nav-menu li.has-children:hover > .nav-submenu {
+/* Drop-downs, while the full menu is showing: open while pointed at, or while
+   keyboard focus is on the item or in its drop-down, so its pages can be reached
+   with Tab (hidden links can't take focus) */
+body:not(.nav-collapsed) .nav-menu li.has-children:is(:hover, :focus-within) > .nav-submenu {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);
 }
 
-body:not(.nav-collapsed) .nav-menu li.has-children:hover > a .dropdown-arrow {
+body:not(.nav-collapsed) .nav-menu li.has-children:is(:hover, :focus-within) > a .dropdown-arrow {
     transform: rotate(180deg);
 }
 

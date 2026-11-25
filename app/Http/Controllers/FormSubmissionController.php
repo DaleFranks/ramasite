@@ -33,7 +33,11 @@ class FormSubmissionController extends Controller
             return $backToForm->withErrors($validator, 'form-'.$form->slug)->withInput();
         }
 
-        $form->recordSubmission($validator->validated())->sendNotification();
+        $submission = $form->recordSubmission($validator->validated());
+
+        // Emailed once the visitor has been sent on to the thank-you message, so a
+        // slow mail server never keeps them waiting
+        defer(fn () => $submission->sendNotification());
 
         return $backToForm->with('form_sent', $form->slug);
     }

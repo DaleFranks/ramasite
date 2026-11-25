@@ -53,7 +53,7 @@ class FeaturedImageTest extends TestCase
             ->assertSee('<meta property="og:image" content="'.url('uploads/images/second.jpg').'">', false)
             ->assertSee('<meta property="og:type" content="article">', false);
 
-        $this->get('/news')->assertSee('<img src="/uploads/images/second.jpg" alt="" loading="lazy">', false);
+        $this->get('/news')->assertSee('<img src="/uploads/images/second.jpg" alt="">', false);
     }
 
     public function test_a_featured_image_no_longer_in_the_content_falls_back_to_the_first(): void

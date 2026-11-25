@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\EntryType;
+use App\Filament\Resources\Images\ImageResource;
 use App\Models\Card;
 use App\Models\Entry;
 use App\Models\Image;
@@ -172,5 +173,14 @@ class ImageLibraryTest extends TestCase
         $file->storeAs(FileUploadConfiguration::directory(), $name, ['disk' => FileUploadConfiguration::disk()]);
 
         return TemporaryUploadedFile::createFromLivewire($name);
+    }
+
+    public function test_an_upload_that_stops_partway_says_which_files_were_added(): void
+    {
+        $this->assertSame(
+            'The server may be out of disk space. These were added before it stopped: team.jpg, office.jpg. Take them out of the list before uploading again, or they\'ll be added a second time.',
+            ImageResource::uploadStoppedMessage('The server may be out of disk space.', ['team.jpg', 'office.jpg']),
+        );
+        $this->assertSame('The server may be out of disk space.', ImageResource::uploadStoppedMessage('The server may be out of disk space.', []));
     }
 }

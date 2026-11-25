@@ -21,6 +21,21 @@ class ImageShortcodeTest extends TestCase
         Image::factory()->create(['filename' => 'team.jpg', 'alt_text' => 'The whole team', 'width' => 1200, 'height' => 800]);
     }
 
+    public function test_the_first_picture_in_a_pages_content_loads_straight_away(): void
+    {
+        $html = (new Entry(['body' => "[image:team.jpg]\n\nText.\n\n[image:team.jpg|400]"]))->bodyHtml();
+
+        $this->assertStringContainsString('<img src="/uploads/images/team.jpg" alt="The whole team" width="1200" height="800">', $html);
+        $this->assertStringContainsString('style="--img-width: 400px" loading="lazy">', $html);
+    }
+
+    public function test_a_page_whose_first_picture_already_loads_straight_away_is_left_as_it_is(): void
+    {
+        $html = (new Entry(['body' => "<img src=\"/banner.png\" alt=\"\">\n\n[image:team.jpg]"]))->bodyHtml();
+
+        $this->assertStringContainsString('height="800" loading="lazy">', $html);
+    }
+
     public function test_the_shortcode_places_a_library_image_with_its_saved_description_and_size(): void
     {
         $this->assertSame(

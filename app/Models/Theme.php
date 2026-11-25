@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
+use League\CommonMark\Extension\Attributes\AttributesExtension;
 
 /**
  * The site's look: branding, colors, fonts and layout options, edited on the
@@ -257,8 +258,9 @@ class Theme extends Model
     /**
      * The top bar's text as HTML. It may use Markdown for bold text and links,
      * such as [(760) 555-0100](tel:+17605550100) to call from a phone, and
-     * [social:slug] for a set of social links. Like page content, it can't hold
-     * links that run code (javascript: and the like).
+     * [social:slug] for a set of social links. Like page content, a link can
+     * open in a new tab with {target=_blank} after it, and it can't hold links
+     * that run code (javascript: and the like).
      *
      * With the Spread alignment, the social links are moved to the right of
      * the bar and the text stays at the left.
@@ -274,7 +276,7 @@ class Theme extends Model
             return "\u{E000}".array_key_last($shortcodes)."\u{E001}";
         }, (string) $this->top_bar_text);
 
-        $html = trim(Str::inlineMarkdown($text, ['allow_unsafe_links' => false]));
+        $html = trim(Str::inlineMarkdown($text, ['allow_unsafe_links' => false], [new AttributesExtension]));
 
         if ($shortcodes === []) {
             return new HtmlString($html);

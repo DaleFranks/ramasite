@@ -40,6 +40,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * The site's look, edited with ordinary form controls instead of code.
@@ -63,6 +64,18 @@ class ThemeSettings extends Page
     public const HEX_PATTERN = '/^#[0-9a-fA-F]{6}$/';
 
     public const RGBA_PATTERN = '/^(#[0-9a-fA-F]{6}|rgba?\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*(,\s*(0|1|0?\.\d+)\s*)?\))$/';
+
+    /**
+     * The main colors, which most automatic colors are worked out from.
+     *
+     * @var list<string>
+     */
+    private const MAIN_COLORS = ['color_primary', 'color_secondary', 'color_background', 'color_text', 'color_card_background', 'color_header_background'];
+
+    /**
+     * The detailed setting whose weight the main heading font's sample is drawn in.
+     */
+    private const HEADINGS_WEIGHT_OPTION = 'heading_weight';
 
     /**
      * @var array<string, mixed>|null
@@ -166,12 +179,12 @@ class ThemeSettings extends Page
                                 Toggle::make('sticky_header')
                                     ->label('Keep the header visible while scrolling')
                                     ->inline(false),
-                                Select::make('site_name_position')
+                                self::redrawsOnlyWhatFollowsIt(Select::make('site_name_position')
                                     ->label('Site name in the header')
                                     ->options(SiteNamePosition::class)
                                     ->required()
                                     ->live()
-                                    ->helperText('Without a logo, the site name always shows.'),
+                                    ->helperText('Without a logo, the site name always shows.')),
                                 ...self::optionFields('Header', 'Layout'),
                             ]),
                             Section::make('Top bar')
@@ -182,7 +195,7 @@ class ThemeSettings extends Page
                                         ->label('Text')
                                         ->maxLength(255)
                                         ->placeholder('Call us: (760) 555-0100')
-                                        ->helperText('Leave empty for no bar. For a number visitors can tap to call: [(760) 555-0100](tel:+17605550100). **Bold** works too, and [social:slug] places a set from the Social links screen.')
+                                        ->helperText('Leave empty for no bar. For a number visitors can tap to call: [(760) 555-0100](tel:+17605550100). Add {target=_blank} after a link to open it in a new tab. **Bold** works too, and [social:slug] places a set from the Social links screen.')
                                         ->columnSpanFull(),
                                     Select::make('top_bar_style')
                                         ->label('Style')
@@ -222,7 +235,7 @@ class ThemeSettings extends Page
                                 ->description('These set Heading 1 and page titles, and every other heading level unless it has its own font, weight or color below. Headings in Dark, Light and Primary color panels and in cards keep their own look.')
                                 ->schema([
                                     Grid::make(4)->schema([
-                                        self::fontSelect('font_headings', ThemeFonts::forHeadings(), weightOption: 'heading_weight')
+                                        self::fontSelect('font_headings', ThemeFonts::forHeadings(), weightOption: self::HEADINGS_WEIGHT_OPTION)
                                             ->label('Font')
                                             ->required(),
                                         ...self::optionFields('Fonts', 'Headings'),
@@ -463,6 +476,10 @@ class ThemeSettings extends Page
             $field->live();
         }
 
+        if (isset($option['live']) || $option['type'] === 'number') {
+            self::redrawsOnlyWhatFollowsIt($field);
+        }
+
         // Help text would take the place of a font's live sample, so it's only set when there is some
         if (isset($option['help'])) {
             $field->helperText($option['help']);
@@ -479,15 +496,30 @@ class ThemeSettings extends Page
      */
     private static function previewTheme(Get $get): Theme
     {
-        $colors = ['color_primary', 'color_secondary', 'color_background', 'color_text', 'color_card_background', 'color_header_background'];
-        $values = [
-            ...collect($colors)->mapWithKeys(fn (string $color): array => [$color => $get($color)])->all(),
+        return self::previewThemeFrom(self::previewValues($get));
+    }
+
+    /**
+     * The form values the automatic settings are worked out from.
+     *
+     * @return array<string, mixed>
+     */
+    private static function previewValues(Get $get): array
+    {
+        return [
+            ...collect(self::MAIN_COLORS)->mapWithKeys(fn (string $color): array => [$color => $get($color)])->all(),
             'font_body' => $get('font_body'),
             'font_headings' => $get('font_headings'),
             'site_name_position' => $get('site_name_position'),
             'options' => array_filter((array) $get('options'), 'filled'),
         ];
+    }
 
+    /**
+     * @param  array<string, mixed>  $values  From previewValues().
+     */
+    private static function previewThemeFrom(array $values): Theme
+    {
         /** @var ArrayObject<string, Theme> $previews */
         $previews = once(fn (): ArrayObject => new ArrayObject);
         $key = serialize($values);
@@ -499,7 +531,7 @@ class ThemeSettings extends Page
         $saved = Theme::current();
         $theme = $saved->replicate();
 
-        foreach ($colors as $color) {
+        foreach (self::MAIN_COLORS as $color) {
             $value = $values[$color];
             $theme->{$color} = is_string($value) && preg_match(self::HEX_PATTERN, $value) ? $value : $saved->{$color};
         }
@@ -512,6 +544,82 @@ class ThemeSettings extends Page
         $theme->options = $values['options'];
 
         return $previews[$key] = $theme;
+    }
+
+    /**
+     * After the box changes, redraw only it and the boxes showing something
+     * worked out from it, rather than the whole screen: the screen holds every
+     * tab's settings, so redrawing it all sends back most of a megabyte.
+     */
+    private static function redrawsOnlyWhatFollowsIt(Field $field): Field
+    {
+        return $field->afterStateUpdated(function (Field $component, mixed $old, Get $get): void {
+            $component->partiallyRender();
+
+            foreach (self::fieldsFollowing($component, $old, $get) as $follower) {
+                $follower->partiallyRender();
+            }
+        });
+    }
+
+    /**
+     * The boxes that show something different now that the given box has
+     * changed from its old value: an "Auto:" value worked out from it, or a
+     * font sample drawn in the weight it sets. Found by comparing the theme
+     * before and after the change, so nothing has to be listed by hand.
+     *
+     * @return list<Field>
+     */
+    private static function fieldsFollowing(Field $changed, mixed $old, Get $get): array
+    {
+        $name = $changed->getName();
+        $after = self::previewValues($get);
+        $before = $after;
+
+        if (str_starts_with($name, 'options.')) {
+            $key = Str::after($name, 'options.');
+
+            if (filled($old)) {
+                $before['options'][$key] = $old;
+            } else {
+                unset($before['options'][$key]);
+            }
+        } else {
+            $before[$name] = $old;
+        }
+
+        $themeBefore = self::previewThemeFrom($before);
+        $themeAfter = self::previewThemeFrom($after);
+
+        $following = collect(ThemeOptions::all())
+            ->keys()
+            ->filter(fn (string $key): bool => $themeBefore->automaticOption($key) != $themeAfter->automaticOption($key))
+            ->map(fn (string $key): string => 'options.'.$key);
+
+        foreach (self::fontWeightOptions() as $font => $weightOption) {
+            if ($themeBefore->option($weightOption) != $themeAfter->option($weightOption)) {
+                $following->push($font);
+            }
+        }
+
+        return collect($changed->getLivewire()->form->getFlatFields())
+            ->filter(fn (Field $field): bool => $field !== $changed && $following->contains($field->getName()))
+            ->values()
+            ->all();
+    }
+
+    /**
+     * The font boxes whose sample is drawn in a weight setting, and that setting.
+     *
+     * @return array<string, string>
+     */
+    private static function fontWeightOptions(): array
+    {
+        return collect(ThemeOptions::all())
+            ->filter(fn (array $option): bool => isset($option['weight_option']))
+            ->mapWithKeys(fn (array $option, string $key): array => ['options.'.$key => $option['weight_option']])
+            ->put('font_headings', self::HEADINGS_WEIGHT_OPTION)
+            ->all();
     }
 
     /**
@@ -536,15 +644,15 @@ class ThemeSettings extends Page
         return $style instanceof FooterStyle ? $style : FooterStyle::tryFrom((string) $style);
     }
 
-    private static function colorPicker(string $name, string $label, ?string $helperText = null): ColorPicker
+    private static function colorPicker(string $name, string $label, ?string $helperText = null): Field
     {
-        return ColorPicker::make($name)
+        return self::redrawsOnlyWhatFollowsIt(ColorPicker::make($name)
             ->label($label)
             ->helperText($helperText)
             ->hex()
             ->regex(self::HEX_PATTERN)
             ->required()
-            ->live(onBlur: true);
+            ->live(onBlur: true));
     }
 
     /**
@@ -556,7 +664,7 @@ class ThemeSettings extends Page
      */
     private static function fontSelect(string $name, array $fonts, ?string $optionKey = null, ?string $weightOption = null, bool $sampleOnlyWhenChosen = false): Select
     {
-        return Select::make($name)
+        $select = Select::make($name)
             ->options($fonts)
             ->searchable()
             ->live()
@@ -572,5 +680,9 @@ class ThemeSettings extends Page
                     ? view('filament.font-sample', ['font' => $font, 'weight' => $weightOption ? $preview->option($weightOption) : 400])
                     : null;
             });
+
+        self::redrawsOnlyWhatFollowsIt($select);
+
+        return $select;
     }
 }

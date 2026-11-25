@@ -8,7 +8,9 @@ use App\Models\Entry;
 use App\Models\Form;
 use App\Models\FormSubmission;
 use App\Models\User;
+use Illuminate\Foundation\Http\Events\RequestHandled;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Mail;
 use Livewire\Livewire;
 use RuntimeException;
@@ -62,6 +64,20 @@ class FormEmailTest extends TestCase
                 && $mail->hasSubject('New submission: Contact');
         });
         $this->assertSame('sent', FormSubmission::query()->sole()->email_status);
+    }
+
+    public function test_the_visitor_is_thanked_before_the_email_is_sent(): void
+    {
+        Mail::fake();
+        $emailsSentBeforeTheReply = null;
+        Event::listen(RequestHandled::class, function () use (&$emailsSentBeforeTheReply): void {
+            $emailsSentBeforeTheReply = Mail::sent(FormSubmissionReceived::class)->count();
+        });
+
+        $this->send();
+
+        $this->assertSame(0, $emailsSentBeforeTheReply);
+        Mail::assertSent(FormSubmissionReceived::class);
     }
 
     public function test_the_email_lists_every_answer_as_typed(): void

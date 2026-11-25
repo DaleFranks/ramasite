@@ -5,10 +5,12 @@ namespace Tests\Feature;
 use App\Filament\Pages\ThemeSettings;
 use App\Models\Theme;
 use App\Models\User;
+use App\ThemeFonts;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -251,6 +253,72 @@ class ThemeSettingsTest extends TestCase
             ->call('save')
             ->assertHasFormErrors(['color_primary'])
             ->assertActionNotMounted('settingsChanged');
+    }
+
+    public function test_choosing_a_font_redraws_only_its_own_box(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $effects = Livewire::test(ThemeSettings::class)->set('data.options.font_quotes', 'Lora')->effects;
+
+        $this->assertArrayNotHasKey('html', $effects);
+        $this->assertSame(['schema-component::form.options.font_quotes'], array_keys($effects['partials']));
+        $this->assertStringContainsString('font-family: '.e(ThemeFonts::stack('Lora')), $effects['partials']['schema-component::form.options.font_quotes']);
+    }
+
+    public function test_changing_the_heading_font_redraws_the_heading_levels_that_follow_it(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $effects = Livewire::test(ThemeSettings::class)->set('data.font_headings', 'Lora')->effects;
+
+        $this->assertArrayNotHasKey('html', $effects);
+        $this->assertEqualsCanonicalizing(
+            ['font_headings', 'options.heading_font_h2', 'options.heading_font_h3', 'options.heading_font_h4', 'options.heading_font_h5', 'options.heading_font_h6'],
+            array_map(fn (string $partial): string => Str::after($partial, 'schema-component::form.'), array_keys($effects['partials'])),
+        );
+        $this->assertStringContainsString('Auto: Lora', $effects['partials']['schema-component::form.options.heading_font_h2']);
+    }
+
+    public function test_changing_the_heading_weight_redraws_the_heading_font_sample(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $effects = Livewire::test(ThemeSettings::class)->set('data.options.heading_weight', '500')->effects;
+
+        $this->assertArrayNotHasKey('html', $effects);
+        $this->assertStringContainsString('font-weight: 500', $effects['partials']['schema-component::form.font_headings']);
+        $this->assertArrayHasKey('schema-component::form.options.heading_weight_h2', $effects['partials']);
+    }
+
+    public function test_changing_a_main_color_redraws_the_colors_worked_out_from_it(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $effects = Livewire::test(ThemeSettings::class)->set('data.color_primary', '#123456')->effects;
+
+        $this->assertArrayNotHasKey('html', $effects);
+        $this->assertStringContainsString('Auto: #123456', $effects['partials']['schema-component::form.options.color_link']);
+        $this->assertArrayNotHasKey('schema-component::form.options.heading_color', $effects['partials']);
+    }
+
+    public function test_changing_the_site_name_position_redraws_the_header_heights(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $effects = Livewire::test(ThemeSettings::class)->set('data.site_name_position', 'below')->effects;
+
+        $this->assertArrayNotHasKey('html', $effects);
+        $this->assertStringContainsString('Auto: 96 px', $effects['partials']['schema-component::form.options.header_height']);
+    }
+
+    public function test_changing_the_footer_style_redraws_the_whole_screen(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $effects = Livewire::test(ThemeSettings::class)->set('data.footer_style', 'light')->effects;
+
+        $this->assertArrayHasKey('html', $effects);
     }
 
     public function test_the_admin_has_readable_hints(): void

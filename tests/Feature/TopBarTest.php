@@ -67,6 +67,16 @@ class TopBarTest extends TestCase
             ->assertDontSee('javascript:', false);
     }
 
+    public function test_a_top_bar_link_can_open_in_a_new_tab(): void
+    {
+        Theme::current()->update(['top_bar_text' => 'Book at [our shop](https://example.com){target=_blank}']);
+
+        $this->get('/about')
+            ->assertOk()
+            ->assertSee('Book at <a target="_blank" href="https://example.com" rel="noopener noreferrer">our shop</a>', false)
+            ->assertDontSee('{target=_blank}', false);
+    }
+
     public function test_without_text_there_is_no_top_bar(): void
     {
         $this->get('/about')

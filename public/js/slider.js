@@ -111,6 +111,12 @@
 
             var next = (index + count) % count;
 
+            // Already showing: the track wouldn't move, so it would never say it had
+            // finished moving, and the slider would wait for it forever
+            if (next === current) {
+                return;
+            }
+
             markLeaving(current);
             markActive(next);
             dots[current].removeAttribute('aria-current');

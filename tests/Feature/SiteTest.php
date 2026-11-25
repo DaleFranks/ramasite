@@ -158,11 +158,26 @@ class SiteTest extends TestCase
 
         $response = $this->get('/news')->assertOk();
 
-        $response->assertSee('<img src="/uploads/images/first.jpg" alt="" loading="lazy">', false)
-            ->assertSee('<img src="https://example.com/photo.png" alt="" loading="lazy">', false)
+        $response->assertSee('<img src="/uploads/images/first.jpg" alt="">', false)
+            ->assertSee('<img src="https://example.com/photo.png" alt="">', false)
             ->assertDontSee('second.jpg')
             ->assertDontSee('not-in-library.jpg');
         $this->assertSame(2, substr_count($response->getContent(), 'class="feed-image"'));
+    }
+
+    public function test_the_first_row_of_pictures_in_a_blog_list_loads_straight_away(): void
+    {
+        Image::factory()->create(['filename' => 'photo.jpg']);
+        $blog = Entry::factory()->blog()->published()->create(['slug' => 'news']);
+
+        foreach (range(1, 4) as $daysAgo) {
+            Entry::factory()->post($blog)->published()->create(['body' => '[image:photo.jpg]', 'published_at' => now()->subDays($daysAgo)]);
+        }
+
+        $html = $this->get('/news')->assertOk()->getContent();
+
+        $this->assertSame(3, substr_count($html, '<img src="/uploads/images/photo.jpg" alt="">'));
+        $this->assertSame(1, substr_count($html, '<img src="/uploads/images/photo.jpg" alt="" loading="lazy">'));
     }
 
     public function test_a_post_is_shown_with_a_link_back_to_its_blog(): void

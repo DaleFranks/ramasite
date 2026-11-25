@@ -22,7 +22,7 @@
             <article class="card feed-item">
                 @isset($previewImages[$post->id])
                     <a href="{{ $post->url() }}" class="feed-image" tabindex="-1" aria-hidden="true">
-                        <img src="{{ $previewImages[$post->id] }}" alt="" loading="lazy">
+                        <img src="{{ $previewImages[$post->id] }}" alt=""@if ($loop->index >= 3) loading="lazy"@endif>
                     </a>
                 @endisset
                 <h2 class="feed-title">

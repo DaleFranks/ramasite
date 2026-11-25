@@ -36,6 +36,38 @@ class EntryTest extends TestCase
         $this->assertSame('Get in touch below. We reply fast. Usually the same day.', $entry->excerpt());
     }
 
+    public function test_the_excerpt_leaves_out_social_links(): void
+    {
+        $entry = new Entry(['body' => "Follow me here:[social:main] daily. Find me [social:main|center]there too.\n\nThird sentence. Fourth one."]);
+
+        $this->assertSame('Follow me here: daily. Find me there too. Third sentence.', $entry->excerpt());
+    }
+
+    public function test_the_excerpt_of_a_long_post_is_its_first_three_sentences(): void
+    {
+        $filler = str_repeat("Filler paragraph that goes on for a while without ending\n\n", 60);
+        $entry = new Entry(['body' => "One. Two\nstill two. Three.\n\n".$filler.'The end.']);
+
+        $this->assertSame("One. Two\nstill two. Three.", $entry->excerpt());
+    }
+
+    public function test_the_excerpt_reads_on_until_it_has_three_sentences(): void
+    {
+        $opening = trim(str_repeat('word ', 400));
+        $middle = trim(str_repeat("More words without a stop\n", 100));
+        $entry = new Entry(['body' => $opening."\n\n".str_replace("\n", "\n\n", $middle)."\n\nOne. Two. Three. Four."]);
+
+        $this->assertSame($opening."\n".$middle."\nOne. Two. Three.", $entry->excerpt());
+    }
+
+    public function test_the_excerpt_of_a_long_post_keeps_link_text_defined_at_the_end(): void
+    {
+        $filler = str_repeat("Filler paragraph. It goes on.\n\n", 100);
+        $entry = new Entry(['body' => "Read [our story][story]. It's short. Really.\n\n".$filler.'[story]: https://example.com/story']);
+
+        $this->assertSame('Read our story. It\'s short. Really.', $entry->excerpt());
+    }
+
     public function test_deleting_a_parent_moves_its_children_to_the_top_level(): void
     {
         $parent = Entry::factory()->create();
